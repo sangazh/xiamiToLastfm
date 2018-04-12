@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='utf-8'?>
+<lfm status="ok">
+    <scrobbles accepted="2" ignored="0">
+        <scrobble>
+            <track corrected="0">Test Track 0</track>
+            <artist corrected="0">Test Artist 0</artist>
+            <album corrected="0"></album>
+            <albumArtist corrected="0"></albumArtist>
+            <timestamp>1287141093</timestamp>
+            <ignoredMessage code="0"></ignoredMessage>
+        </scrobble>
+        <scrobble>
+            <track corrected="0">Test Track 1</track>
+            <artist corrected="0">Test Artist 1</artist>
+            <album corrected="0"></album>
+            <albumArtist corrected="0"></albumArtist>
+            <timestamp>1287141093</timestamp>
+            <ignoredMessage code="0"></ignoredMessage>
+        </scrobble>
+    </scrobbles>
+</lfm>

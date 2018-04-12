@@ -1,0 +1,20 @@
+title = "Xiami and Last.fm Example"
+
+[lastfm]
+  api_key = "4778db9e5d5b2dd00fb34792ac28c1c1"
+  domain = "http://ws.audioscrobbler.com"
+  shared_secret = "bb471918f14e2b29e219185d4591baa6"
+
+  [lastfm.auth]
+    sk = ""
+    token = ""
+    token_expired = 0
+
+[xiami]
+  domain = "http://www.xiami.com"
+  spm = ""
+  user_id = 0
+
+  [xiami.url]
+    recent = "/space/charts-recent/u/"
+    fav_song = "/space/lib-song/u/"
