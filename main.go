@@ -14,9 +14,11 @@ import (
 )
 
 var debug bool
+var quick bool
 
 func init() {
 	flag.BoolVar(&debug, "d", false, "debug mode, will export logs to file")
+	flag.BoolVar(&quick, "q", false, "quick start mode, start immediately andd only run one time")
 	flag.Parse()
 	util.InitConfig()
 }
@@ -29,19 +31,24 @@ func main() {
 	}
 
 	prepare()
-	run()
+
+	if quick {
+		quickStart()
+	} else {
+		delayStart()
+		run()
+	}
 }
 
 func run() {
-	delayStart()
 	fmt.Println("start scrobbling...")
 
 	nowPlayingChan := make(chan interface{})
 	playedChan := make(chan interface{}, 10)
 
 	tickerXM := time.NewTicker(2 * time.Minute)
-	quit := make(chan struct{})
-	stop(quit)
+	quitChan := make(chan struct{})
+	stop(quitChan)
 
 	defer func() {
 		close(nowPlayingChan)
@@ -53,7 +60,7 @@ func run() {
 			select {
 			case <-tickerXM.C:
 				xiami.GetTracks(nowPlayingChan, playedChan)
-			case <-quit:
+			case <-quitChan:
 				tickerXM.Stop()
 				return
 			}
@@ -61,18 +68,17 @@ func run() {
 	}()
 	go func() {
 		for {
-			lastfm.StartScrobble(playedChan)
+			lastfm.StartScrobble(playedChan, quitChan)
 		}
 	}()
 	go func() {
 		for {
-			lastfm.UpdateNowPlaying(nowPlayingChan)
+			lastfm.UpdateNowPlaying(nowPlayingChan, quitChan)
 		}
 	}()
-
-	time.Sleep(time.Hour)
-	close(quit)
-	fmt.Println("Stopped.")
+	for {
+		time.Sleep(time.Hour)
+	}
 }
 
 func prepare() {
@@ -99,4 +105,29 @@ func stop(quit chan struct{}) {
 		fmt.Println("Stopped.")
 		os.Exit(1)
 	}()
+}
+
+func quickStart() {
+	nowPlayingChan := make(chan interface{})
+	playedChan := make(chan interface{}, 10)
+	xiami.GetTracks(nowPlayingChan, playedChan)
+	quitChan := make(chan struct{})
+	stop(quitChan)
+
+	go func() {
+		for {
+			lastfm.StartScrobble(playedChan, quitChan)
+		}
+	}()
+
+	lastfm.UpdateNowPlaying(nowPlayingChan, quitChan)
+
+	defer func() {
+		close(nowPlayingChan)
+		close(playedChan)
+	}()
+
+	time.Sleep(time.Minute * 5)
+	close(quitChan)
+	fmt.Println("Stopped.")
 }

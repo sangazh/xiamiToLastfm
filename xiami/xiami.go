@@ -148,6 +148,7 @@ func getAlbum(url string) (artist, album string, ok bool) {
 }
 
 func getDoc(url string) (*goquery.Document, error) {
+	log.Println("XiaMi getDoc url: ", url)
 	res, err := http.Get(url)
 
 	if err != nil {

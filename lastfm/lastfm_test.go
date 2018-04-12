@@ -55,7 +55,7 @@ func TestSignature(t *testing.T) {
 	if len(result) != 32 {
 		t.Error(`signature() length not equal to 32`)
 	}
-	expected := `e05dd3b746c95c6d5d896cd7079757fe` //fb441e79f2820ccd7d7bd71174ff34f9
+	expected := `e05dd3b746c95c6d5d896cd7079757fe` //e05dd3b746c95c6d5d896cd7079757fe
 
 	assert.Equal(t, expected, result)
 }
@@ -140,4 +140,17 @@ func TestRenderScrobbleResp(t *testing.T) {
 
 	assert.Equal(t, 2, accepted)
 	assert.Equal(t, 0, ignored)
+}
+
+func TestHandleError(t *testing.T) {
+	r, err := os.Open("sample/error.json")
+
+	if err != nil {
+		t.Error(err)
+	}
+	defer r.Close()
+	data, _ := ioutil.ReadAll(r)
+	code, msg := handleError(data)
+	assert.Equal(t, 9, code)
+	assert.Equal(t, "Invalid session key - Please re-authenticate", msg)
 }

@@ -1,7 +1,8 @@
 # Intro
-Yet another go project to scrobble xiami songs to last.fm.
+Yet another go project to scrobble your xiami recent songs to last.fm.
 
-设定的是每三分钟去爬一次虾米主页里的最近播放歌曲，1小时以前的都会放弃，因为时间不准确了。
+设定为每两分钟去爬一次虾米主页里的最近播放歌曲，1小时以前的都会放弃，因为时间不准确了。
+Ctrl+C 退出
 
 # How to use
 在下载的目录下
@@ -15,5 +16,4 @@ cp config.example.toml config.toml
 # Todo
 - 同步虾米收藏的歌曲到last.fm的fav
 - MusicBiz
-- 定时
-- 根据特定错误code处理
+

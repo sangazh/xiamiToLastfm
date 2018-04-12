@@ -32,7 +32,7 @@ type ScrobbleParams struct {
 	Method            string   `json:"method"`
 }
 
-func StartScrobble(playedChan chan interface{}) bool {
+func StartScrobble(playedChan chan interface{}, quitChan chan struct{}) bool {
 	t := <-playedChan
 	if t == nil {
 		return false
@@ -55,7 +55,7 @@ func StartScrobble(playedChan chan interface{}) bool {
 	query["format"] = "json"
 	log.Println("StartScrobble - request query:", query)
 
-	respData, ok := postRequest(query)
+	respData, ok := postRequest(query, quitChan)
 	if !ok {
 		fmt.Println("scrobble sent failed.")
 		return false
@@ -85,7 +85,7 @@ func renderScrobbleResp(data []byte) (accepted, ignored int) {
 	return resp.Data.Msg.Accepted, resp.Data.Msg.Ignored
 }
 
-func UpdateNowPlaying(nowPlayingChan chan interface{}) bool {
+func UpdateNowPlaying(nowPlayingChan chan interface{}, quitChan chan struct{}) bool {
 	t := <-nowPlayingChan
 	if t == nil {
 		return false
@@ -107,7 +107,7 @@ func UpdateNowPlaying(nowPlayingChan chan interface{}) bool {
 	query["format"] = "json"
 	log.Println("UpdateNowPlaying - request query:", query)
 
-	_, ok := postRequest(query)
+	_, ok := postRequest(query, quitChan)
 	if !ok {
 		fmt.Println("UpdateNowPlaying sent failed.")
 		return false
@@ -148,7 +148,7 @@ func getRequest(url string) ([]byte, bool) {
 	return resData, true
 }
 
-func postRequest(query map[string]interface{}) ([]byte, bool) {
+func postRequest(query map[string]interface{}, quitChan chan struct{}) ([]byte, bool) {
 	r := bytes.NewReader([]byte(queryString(query)))
 	contentType := "application/x-www-form-urlencoded"
 
@@ -166,6 +166,13 @@ func postRequest(query map[string]interface{}) ([]byte, bool) {
 	if res.StatusCode != 200 {
 		log.Printf("status code error: %d %s on %s ", res.StatusCode, res.Status, apiUrl)
 		log.Println("err body: ", string(resData))
+		errCode, errMsg := handleError(resData)
+		if errCode == 9 {
+			fmt.Println(errMsg)
+			resetAuth()
+			fmt.Println("Config reset. Please re-start the program.")
+			close(quitChan)
+		}
 		return nil, false
 	}
 	log.Println("Post response body: ", string(resData))
@@ -177,4 +184,15 @@ func toMap(byteData []byte) (result map[string]string) {
 	r := bytes.NewReader(byteData)
 	json.NewDecoder(r).Decode(&result)
 	return result
+}
+
+type ErrResponse struct {
+	Code int    `json:"error"`
+	Msg  string `json:"message"`
+}
+
+func handleError(errData []byte) (code int, msg string) {
+	var resp ErrResponse
+	json.Unmarshal(errData, &resp)
+	return resp.Code, resp.Msg
 }

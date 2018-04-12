@@ -166,3 +166,10 @@ func parseKey(b []byte) (string, bool) {
 	}
 	return s.Session.Key, true
 }
+
+func resetAuth() {
+	viper.Set("lastfm.auth.token", "")
+	viper.Set("lastfm.auth.token_expired", 0)
+	viper.Set("lastfm.auth.sk", "")
+	viper.WriteConfig()
+}
