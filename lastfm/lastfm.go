@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"xiami2LastFM/xiami"
+	"xiamiToLastfm/xiami"
 
 	"github.com/theherk/viper"
 )

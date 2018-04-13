@@ -8,9 +8,9 @@ import (
 	"syscall"
 	"time"
 
-	"xiami2LastFM/lastfm"
-	"xiami2LastFM/util"
-	"xiami2LastFM/xiami"
+	"xiamiToLastfm/lastfm"
+	"xiamiToLastfm/util"
+	"xiamiToLastfm/xiami"
 )
 
 var debug bool
