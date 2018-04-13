@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -44,28 +46,28 @@ func StartScrobble(playedChan chan interface{}, quitChan chan struct{}) bool {
 	xm := t.(xiami.Track)
 	log.Println("last.fm: playedChan track: ", xm)
 
-	query := make(map[string]interface{}, 0)
+	v := url.Values{}
+	v.Set("artist[0]", xm.Artist)
+	v.Set("album[0]", xm.Album)
+	v.Set("track[0]", xm.Title)
+	v.Set("timestamp[0]", fmt.Sprint(xm.Timestamp))
+	v.Set("method", "track.scrobble")
+	v.Set("sk", sk)
+	v.Set("api_key", apiKey)
+	sig := signature(&v)
+	v.Set("api_sig", sig)
+	v.Set("format", "json")
 
-	query["artist[0]"] = xm.Artist
-	query["album[0]"] = xm.Album
-	query["track[0]"] = xm.Title
-	query["timestamp[0]"] = fmt.Sprint(xm.Timestamp)
-
-	query["method"] = "track.scrobble"
-	query["sk"] = sk
-	query["api_key"] = apiKey
-	query["api_sig"] = signature(query)
-	query["format"] = "json"
-	log.Println("last.fm: StartScrobble - request query:", query)
-
+	query, _ := url.QueryUnescape(v.Encode())
 	respData, ok := postRequest(query, quitChan)
 	if !ok {
-		fmt.Println("last.fm: scrobble sent failed.")
+		fmt.Println("last.fm: scrobble sent failed. Try later.")
 		return false
 	}
 
 	accepted, ignored := renderScrobbleResp(respData)
-	fmt.Printf("last.fm: Scrobbled succeseful - accepted: %d, ignored: %d\n", accepted, ignored)
+	log.Printf("last.fm: Scrobbled succese - accepted: %d, ignored: %d\n", accepted, ignored)
+	fmt.Printf("last.fm: Scrobbled succese. %s - %s \n", xm.Title, xm.Artist)
 
 	//写下执行时间
 	if len(playedChan) < 1 {
@@ -103,25 +105,25 @@ func UpdateNowPlaying(nowPlayingChan chan interface{}, quitChan chan struct{}) b
 	xm := t.(xiami.Track)
 	log.Println("last.fm: nowPlayingChan track: ", xm)
 
-	query := map[string]interface{}{
-		"method":  "track.updateNowPlaying",
-		"sk":      sk,
-		"api_key": apiKey,
-		"artist":  xm.Artist,
-		"album":   xm.Album,
-		"track":   xm.Title,
-	}
+	v := url.Values{}
+	v.Set("method", "track.updateNowPlaying")
+	v.Set("sk", sk)
+	v.Set("api_key", apiKey)
+	v.Set("artist", xm.Artist)
+	v.Set("album", xm.Album)
+	v.Set("track", xm.Title)
+	sig := signature(&v)
+	v.Set("api_sig", sig)
+	v.Set("format", "json")
 
-	query["api_sig"] = signature(query)
-	query["format"] = "json"
-
+	query, _ := url.QueryUnescape(v.Encode())
 	_, ok := postRequest(query, quitChan)
 	if !ok {
 		fmt.Println("last.fm: UpdateNowPlaying sent failed.")
 		return false
 	}
 
-	fmt.Println("nowPlaying", xm)
+	fmt.Printf("last.fm: UpdateNowPlaying success. %s - %s \n", xm.Title, xm.Artist)
 	return true
 }
 
@@ -156,8 +158,8 @@ func getRequest(url string) ([]byte, bool) {
 	return resData, true
 }
 
-func postRequest(query map[string]interface{}, quitChan chan struct{}) ([]byte, bool) {
-	r := bytes.NewReader([]byte(queryString(query)))
+func postRequest(query string, quitChan chan struct{}) ([]byte, bool) {
+	r := bytes.NewReader([]byte(query))
 	contentType := "application/x-www-form-urlencoded"
 
 	log.Println("last.fm: postRequest params: ", query)
@@ -180,7 +182,9 @@ func postRequest(query map[string]interface{}, quitChan chan struct{}) ([]byte, 
 			resetAuth()
 			fmt.Println("Config reset. Please re-start the program.")
 			close(quitChan)
+			os.Exit(1)
 		}
+
 		return nil, false
 	}
 	log.Println("last.fm: postReques response: ", string(resData))

@@ -2,11 +2,13 @@ package lastfm
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"sort"
 	"time"
@@ -69,9 +71,8 @@ func checkAuth() (tokenOk, skOk bool) {
 
 // token valid for 60 minutes
 func getToken() (ok bool) {
-	url := fmt.Sprintf("%s/?method=auth.gettoken&api_key=%s&format=json", apiUrl, apiKey)
-
-	resp, ok := getRequest(url)
+	requestUrl := fmt.Sprintf("%s/?method=auth.gettoken&api_key=%s&format=json", apiUrl, apiKey)
+	resp, ok := getRequest(requestUrl)
 	if !ok {
 		return false
 	}
@@ -91,11 +92,10 @@ func getToken() (ok bool) {
 }
 
 //generate signature
-func signature(query map[string]interface{}) (sig string) {
-	query["api_key"] = apiKey
-	ordered := prepareSigText(query)
+func signature(v *url.Values) (sig string) {
+	ordered := prepareSigText(*v)
 	log.Println("signature - ordered query string ", ordered)
-	text := fmt.Sprintf("%s%s", ordered, sharedSecret)
+	text := ordered + sharedSecret
 	log.Println("signature - before md5 ", text)
 	data := []byte(text)
 	hashed := md5.Sum(data)
@@ -103,19 +103,28 @@ func signature(query map[string]interface{}) (sig string) {
 }
 
 //sort query first, then return string with format of <key><value>
-func prepareSigText(query map[string]interface{}) (text string) {
-	// sort query
-	var mapKey []string
-	for key := range query {
-		mapKey = append(mapKey, key)
+func prepareSigText(v url.Values) (text string) {
+	if v == nil {
+		return ""
+	}
+	var buf bytes.Buffer
+	keys := make([]string, 0, len(v))
+	for k := range v {
+		keys = append(keys, k)
 	}
 
-	sort.Strings(mapKey)
-	for _, key := range mapKey {
-		text += fmt.Sprintf("%s%s", key, query[key])
+	sort.Strings(keys)
+	for _, k := range keys {
+		vs := v[k]
+		//prefix := url.QueryEscape(k)
+		for _, v := range vs {
+			//buf.WriteString(prefix)
+			//buf.WriteString(url.QueryEscape(v))
+			buf.WriteString(k)
+			buf.WriteString(v)
+		}
 	}
-
-	return text
+	return buf.String()
 }
 
 func authPage() string {
@@ -124,15 +133,17 @@ func authPage() string {
 
 // Session keys have an infinite lifetime by default
 func getSession() {
-	query := map[string]interface{}{
-		"method":  "auth.getSession",
-		"api_key": apiKey,
-		"token":   token,
-	}
+	v := url.Values{}
+	v.Set("method", "auth.getSession")
+	v.Set("api_key", apiKey)
+	v.Set("token", token)
+	sig := signature(&v)
+	v.Set("api_sig", sig)
+	v.Set("format", "json")
 
-	query["api_sig"] = signature(query)
-	url := fmt.Sprintf("%s/?%s&format=json", apiUrl, queryString(query))
-	resp, ok := getRequest(url)
+	query, _ := url.QueryUnescape(v.Encode())
+	requestUrl := fmt.Sprintf("%s/?%s", apiUrl, query)
+	resp, ok := getRequest(requestUrl)
 	if !ok {
 		log.Fatal("last.fm getSession Failed")
 	}
