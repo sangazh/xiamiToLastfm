@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -20,7 +21,7 @@ const (
 )
 
 var (
-	domain, url, spm string
+	domain, uri, spm string
 	userId           int
 )
 
@@ -42,7 +43,7 @@ func Init() {
 
 func checkConfig() bool {
 	domain = viper.GetString("xiami.domain")
-	url = domain + viper.GetString("xiami.url.recent")
+	uri = domain + viper.GetString("xiami.url.recent")
 	userId = viper.GetInt("xiami.user_id")
 	spm = viper.GetString("xiami.spm")
 
@@ -53,21 +54,12 @@ func checkConfig() bool {
 }
 
 //parseUrl and save to config
-func parseUrl(url string) (userId, spm string) {
-	b := strings.Split(url, "?")
-	b1 := strings.Split(b[0], "/")
-	b2 := strings.Split(b[1], "=")
+func parseUrl(rawUrl string) (userId, spm string) {
+	u, _ := url.Parse(rawUrl)
+	spm = u.Query().Get("spm")
 
-	b = append(b1, b2...)
-	for index, k := range b {
-		if k == "u" {
-			userId = b[index+1]
-		}
-		if k == "spm" {
-			spm = b[index+1]
-			spm = strings.TrimRight(spm, "\n")
-		}
-	}
+	s := strings.Split(u.Path, "/")
+	userId = s[2]
 
 	viper.Set("xiami.userId", userId)
 	viper.Set("xiami.spm", spm)
@@ -78,7 +70,7 @@ func parseUrl(url string) (userId, spm string) {
 
 func GetTracks(playingChan, playedChan chan interface{}) {
 	lastCheckAt := viper.GetInt64("xiami.checked_at")
-	requestUrl := fmt.Sprintf("%s%d", url, userId)
+	requestUrl := fmt.Sprintf("%s%d", uri, userId)
 
 	doc, err := getDoc(requestUrl)
 	if err != nil || doc == nil {
@@ -90,13 +82,10 @@ func GetTracks(playingChan, playedChan chan interface{}) {
 		trackTime := s.Find(".track_time").Text()
 		timeStamp, scrobbleType, ok := parseTime(trackTime)
 
-		if timeStamp < lastCheckAt {
+		if !ok || timeStamp < lastCheckAt {
 			return
 		}
 
-		if !ok {
-			return
-		}
 		title, _ := s.Find(".song_name a").Attr("title")
 		trackUrl, _ := s.Find(".song_name a").Attr("href")
 		artist, album, ok := getAlbum(trackUrl)
@@ -105,14 +94,15 @@ func GetTracks(playingChan, playedChan chan interface{}) {
 		}
 
 		t := Track{Title: title, Artist: artist, Album: album, Timestamp: timeStamp}
-		fmt.Printf("Listened: %d: %s - %s 《%s》 \n", i, title, artist, album)
 
 		switch scrobbleType {
 		case typeNowPlaying:
 			playingChan <- t
+			fmt.Printf("nowPlaying: %s - %s 《%s》 \n", title, artist, album)
 			log.Println("xiami: GetTrack - playingChan <- t ", t)
 		case typePlayed:
 			playedChan <- t
+			fmt.Printf("Listened: %d: %s - %s 《%s》 \n", i, title, artist, album)
 			log.Println("xiami: GetTrack - playedChan <- t ", t)
 		default:
 			log.Println("xiami: GetTrack - switch default")
