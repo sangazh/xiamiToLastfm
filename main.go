@@ -46,7 +46,7 @@ func run() {
 	nowPlayingChan := make(chan interface{})
 	playedChan := make(chan interface{}, 10)
 
-	tickerXM := time.NewTicker(2 * time.Minute)
+	tickerXM := time.NewTicker(time.Minute)
 	quitChan := make(chan struct{})
 	stop(quitChan)
 

@@ -13,7 +13,6 @@ func Logger(debug bool) (f *os.File) {
 	if !debug {
 		log.SetOutput(ioutil.Discard)
 		return nil
-
 	}
 
 	date := time.Now().Format("2006-01-02")

@@ -46,7 +46,6 @@ func checkConfig() bool {
 	uri = domain + viper.GetString("xiami.url.recent")
 	userId = viper.GetInt("xiami.user_id")
 	spm = viper.GetString("xiami.spm")
-
 	if userId > 0 && spm != "" {
 		return true
 	}
@@ -57,11 +56,12 @@ func checkConfig() bool {
 func parseUrl(rawUrl string) (userId, spm string) {
 	u, _ := url.Parse(rawUrl)
 	spm = u.Query().Get("spm")
+	spm = strings.TrimRight(spm, "\n")
 
 	s := strings.Split(u.Path, "/")
 	userId = s[2]
 
-	viper.Set("xiami.userId", userId)
+	viper.Set("xiami.user_id", userId)
 	viper.Set("xiami.spm", spm)
 	viper.WriteConfig()
 
@@ -69,6 +69,7 @@ func parseUrl(rawUrl string) (userId, spm string) {
 }
 
 func GetTracks(playingChan, playedChan chan interface{}) {
+	userId = viper.GetInt("xiami.user_id")
 	lastCheckAt := viper.GetInt64("xiami.checked_at")
 	requestUrl := fmt.Sprintf("%s%d", uri, userId)
 
