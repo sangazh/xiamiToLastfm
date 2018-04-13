@@ -48,8 +48,6 @@ func Auth() {
 
 func checkAuth() (tokenOk, skOk bool) {
 	domain = viper.GetString("lastfm.domain")
-	apiKey = viper.GetString("lastfm.api_key")
-	sharedSecret = viper.GetString("lastfm.shared_secret")
 	apiUrl = domain + "/2.0"
 
 	token = viper.GetString("lastfm.auth.token")

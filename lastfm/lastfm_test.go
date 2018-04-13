@@ -75,31 +75,28 @@ func TestSignature2(t *testing.T) {
 	v.Set("album[0]", "TVアニメ「血界戦線&BEYOND」オリジナルサウンドトラック")
 
 	result := signature(&v)
-	fmt.Println(v.Encode())
 
 	if len(result) != 32 {
 		t.Error(`signature() length not equal to 32`)
 	}
-	expected := `43da2b8501daadcc39738998ed16dd26`
+	expected := `c50b68fc0415def12fc048b9efaccdf1`
 	assert.Equal(t, expected, result)
 }
 
 func TestScrobbleSignature(t *testing.T) {
 	v := url.Values{}
-	/*
-	query := map[string]interface{}{
-		"artist[0]":    "服部隆之",
-		"artist[1]":    "服部隆之",
-		"track[0]":     "自己顕示欲",
-		"track[1]":     "仕事",
-		"album[0]":     "TVアニメ『ID-0』オリジナルサウンドトラック",
-		"album[1]":     "TVアニメ『ID-0』オリジナルサウンドトラック",
-		"timestamp[0]": "1523328000",
-		"timestamp[1]": "1523327819",
-		"api_key":      "4778db9e5d5b2dd00fb34792ac28c1c1",
-		"sk":           "rIr2HM8h5s-_t-5nM0PKzPL8m7tjGxgH",
-		"method":       "track.scrobble",
-	}*/
+
+	v.Set("artist[0]", "服部隆之")
+	v.Set("artist[1]", "服部隆之")
+	v.Set("track[0]", "自己顕示欲")
+	v.Set("track[1]", "仕事")
+	v.Set("album[0]", "TVアニメ『ID-0』オリジナルサウンドトラック")
+	v.Set("album[1]", "TVアニメ『ID-0』オリジナルサウンドトラック")
+	v.Set("timestamp[0]", "1523328000")
+	v.Set("timestamp[1]", "1523327819")
+	v.Set("api_key", "4778db9e5d5b2dd00fb34792ac28c1c1")
+	v.Set("sk", "rIr2HM8h5s-_t-5nM0PKzPL8m7tjGxgH")
+	v.Set("method", "track.scrobble")
 
 	result := signature(&v)
 
@@ -107,6 +104,30 @@ func TestScrobbleSignature(t *testing.T) {
 
 	expected := `257e6be2dbc096e5a89a63ce7555bb09`
 	assert.Equal(t, expected, result)
+}
+
+func TestSignatureWithSpecial(t *testing.T) {
+	album := "TVアニメ「血界戦線&BEYOND」オリジナルサウンドトラック"
+	v := url.Values{}
+	v.Set("artist[0]", "岩崎太整")
+	v.Set("track[0]", "BLOCK SCHOLARS feat. Hybrid Thoughts")
+	v.Set("album[0]", album)
+	v.Set("timestamp[0]", "1523608740")
+	v.Set("api_key", apiKey)
+	v.Set("sk", "1hWanAAsPJgERBmM-1jF04GFEjtz4lJG")
+	v.Set("method", "track.scrobble")
+
+	sig := signature(&v)
+	expected := `0c972ff186af2ee5ce3382ad7e7efa40`
+	assert.Equal(t, expected, sig)
+
+	v.Set("api_sig", sig)
+	v.Set("format", "json")
+
+	s := v.Encode()
+	v2, _ := url.ParseQuery(s)
+
+	assert.Equal(t, album, v2.Get("album[0]"))
 }
 
 func TestParseKey(t *testing.T) {

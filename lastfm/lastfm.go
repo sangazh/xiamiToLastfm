@@ -18,7 +18,12 @@ import (
 )
 
 var (
-	domain, apiKey, sharedSecret, apiUrl string
+	domain, apiUrl string
+)
+
+const (
+	sharedSecret = "bb471918f14e2b29e219185d4591baa6"
+	apiKey       = "4778db9e5d5b2dd00fb34792ac28c1c1"
 )
 
 type ScrobbleParams struct {
@@ -58,8 +63,7 @@ func StartScrobble(playedChan chan interface{}, quitChan chan struct{}) bool {
 	v.Set("api_sig", sig)
 	v.Set("format", "json")
 
-	query, _ := url.QueryUnescape(v.Encode())
-	respData, ok := postRequest(query, quitChan)
+	respData, ok := postRequest(v.Encode(), quitChan)
 	if !ok {
 		fmt.Println("last.fm: scrobble sent failed. Try later.")
 		return false
@@ -116,8 +120,7 @@ func UpdateNowPlaying(nowPlayingChan chan interface{}, quitChan chan struct{}) b
 	v.Set("api_sig", sig)
 	v.Set("format", "json")
 
-	query, _ := url.QueryUnescape(v.Encode())
-	_, ok := postRequest(query, quitChan)
+	_, ok := postRequest(v.Encode(), quitChan)
 	if !ok {
 		fmt.Println("last.fm: UpdateNowPlaying sent failed.")
 		return false
@@ -132,7 +135,6 @@ func queryString(query map[string]interface{}) (text string) {
 	for key, value := range query {
 		text += fmt.Sprintf("%s=%s&", key, value)
 	}
-
 	return strings.TrimRight(text, "&")
 }
 
@@ -188,7 +190,6 @@ func postRequest(query string, quitChan chan struct{}) ([]byte, bool) {
 		return nil, false
 	}
 	log.Println("last.fm: postReques response: ", string(resData))
-
 	return resData, true
 }
 
