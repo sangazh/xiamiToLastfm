@@ -1,6 +1,9 @@
 # Intro
 Yet another go project to scrobble your xiami recent songs to last.fm.
 
+- Scrobbling now
+- Recent played
+
 设定为每两分钟去爬一次虾米主页里的最近播放歌曲，1小时以前的都会放弃，因为时间不准确了。
 Ctrl+C 退出
 
@@ -16,5 +19,5 @@ cp config.example.toml config.toml
 # Todo
 - 同步虾米收藏的歌曲到last.fm的fav
 - MusicBiz
-- 记录上次执行时间，与虾米页面时间计算，以免重复请求。
+- 后台跑的进程怎么正常退出？
 

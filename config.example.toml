@@ -14,6 +14,7 @@ title = "Xiami and Last.fm Example"
   domain = "http://www.xiami.com"
   spm = ""
   user_id = 0
+  checked_at = 0
 
   [xiami.url]
     recent = "/space/charts-recent/u/"

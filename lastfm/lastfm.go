@@ -8,8 +8,11 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"xiami2LastFM/xiami"
+
+	"github.com/theherk/viper"
 )
 
 var (
@@ -63,6 +66,12 @@ func StartScrobble(playedChan chan interface{}, quitChan chan struct{}) bool {
 
 	accepted, ignored := renderScrobbleResp(respData)
 	fmt.Printf("last.fm: Scrobbled succeseful - accepted: %d, ignored: %d\n", accepted, ignored)
+
+	//写下执行时间
+	if len(playedChan) < 1 {
+		viper.Set("xiami.checked_at", time.Now().Truncate(time.Minute).Unix())
+		viper.WriteConfig()
+	}
 	return true
 }
 

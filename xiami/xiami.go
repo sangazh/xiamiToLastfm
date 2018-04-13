@@ -77,6 +77,7 @@ func parseUrl(url string) (userId, spm string) {
 }
 
 func GetTracks(playingChan, playedChan chan interface{}) {
+	lastCheckAt := viper.GetInt64("xiami.checked_at")
 	requestUrl := fmt.Sprintf("%s%d", url, userId)
 
 	doc, err := getDoc(requestUrl)
@@ -89,6 +90,10 @@ func GetTracks(playingChan, playedChan chan interface{}) {
 		trackTime := s.Find(".track_time").Text()
 		timeStamp, scrobbleType, ok := parseTime(trackTime)
 
+		if timeStamp < lastCheckAt {
+			return
+		}
+
 		if !ok {
 			return
 		}
@@ -100,7 +105,7 @@ func GetTracks(playingChan, playedChan chan interface{}) {
 		}
 
 		t := Track{Title: title, Artist: artist, Album: album, Timestamp: timeStamp}
-		fmt.Printf("Listened: %d: %s - %s 《%s》 , at %d \n", i, title, artist, album, timeStamp)
+		fmt.Printf("Listened: %d: %s - %s 《%s》 \n", i, title, artist, album)
 
 		switch scrobbleType {
 		case typeNowPlaying:
@@ -148,7 +153,7 @@ func getAlbum(url string) (artist, album string, ok bool) {
 }
 
 func getDoc(url string) (*goquery.Document, error) {
-	log.Println("XiaMi getDoc url: ", url)
+	log.Println("xiami: getDoc url: ", url)
 	res, err := http.Get(url)
 
 	if err != nil {
