@@ -134,7 +134,7 @@ func getAlbum(url string) (artist, album string, ok bool) {
 
 	var info []string
 	doc.Find("#albums_info tr").Each(func(i int, s *goquery.Selection) {
-		// For each item found, get the band and title
+		// For each item found, get the artist and title
 		title, _ := s.Find("a").Attr("title")
 		info = append(info, title)
 	})
