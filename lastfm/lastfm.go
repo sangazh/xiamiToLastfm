@@ -39,7 +39,7 @@ func StartScrobble(playedChan chan interface{}, quitChan chan struct{}) bool {
 	}
 
 	xm := t.(xiami.Track)
-	log.Println("playedChan track: ", xm)
+	log.Println("last.fm: playedChan track: ", xm)
 
 	query := make(map[string]interface{}, 0)
 
@@ -53,16 +53,16 @@ func StartScrobble(playedChan chan interface{}, quitChan chan struct{}) bool {
 	query["api_key"] = apiKey
 	query["api_sig"] = signature(query)
 	query["format"] = "json"
-	log.Println("StartScrobble - request query:", query)
+	log.Println("last.fm: StartScrobble - request query:", query)
 
 	respData, ok := postRequest(query, quitChan)
 	if !ok {
-		fmt.Println("scrobble sent failed.")
+		fmt.Println("last.fm: scrobble sent failed.")
 		return false
 	}
 
 	accepted, ignored := renderScrobbleResp(respData)
-	fmt.Printf("Scrobbled succeseful - accepted: %d, ignored: %d\n", accepted, ignored)
+	fmt.Printf("last.fm: Scrobbled succeseful - accepted: %d, ignored: %d\n", accepted, ignored)
 	return true
 }
 
@@ -92,7 +92,7 @@ func UpdateNowPlaying(nowPlayingChan chan interface{}, quitChan chan struct{}) b
 	}
 
 	xm := t.(xiami.Track)
-	log.Println("nowPlayingChan track: ", xm)
+	log.Println("last.fm: nowPlayingChan track: ", xm)
 
 	query := map[string]interface{}{
 		"method":  "track.updateNowPlaying",
@@ -105,11 +105,10 @@ func UpdateNowPlaying(nowPlayingChan chan interface{}, quitChan chan struct{}) b
 
 	query["api_sig"] = signature(query)
 	query["format"] = "json"
-	log.Println("UpdateNowPlaying - request query:", query)
 
 	_, ok := postRequest(query, quitChan)
 	if !ok {
-		fmt.Println("UpdateNowPlaying sent failed.")
+		fmt.Println("last.fm: UpdateNowPlaying sent failed.")
 		return false
 	}
 
@@ -127,7 +126,7 @@ func queryString(query map[string]interface{}) (text string) {
 }
 
 func getRequest(url string) ([]byte, bool) {
-	log.Println("Getting request.. url: ", url)
+	log.Println("last.fm: getRequest url: ", url)
 	res, err := http.Get(url)
 
 	if err != nil {
@@ -143,7 +142,7 @@ func getRequest(url string) ([]byte, bool) {
 		log.Println("err body: ", string(resData))
 		return nil, false
 	}
-	log.Println("Get response body: ", string(resData))
+	log.Println("last.fm: getRequest response: ", string(resData))
 
 	return resData, true
 }
@@ -152,7 +151,7 @@ func postRequest(query map[string]interface{}, quitChan chan struct{}) ([]byte, 
 	r := bytes.NewReader([]byte(queryString(query)))
 	contentType := "application/x-www-form-urlencoded"
 
-	log.Println("Posting request.. params: ", query)
+	log.Println("last.fm: postRequest params: ", query)
 	res, err := http.Post(apiUrl, contentType, r)
 
 	if err != nil {
@@ -164,8 +163,8 @@ func postRequest(query map[string]interface{}, quitChan chan struct{}) ([]byte, 
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		log.Printf("status code error: %d %s on %s ", res.StatusCode, res.Status, apiUrl)
-		log.Println("err body: ", string(resData))
+		log.Printf("last.fm: postRequest status code error: %d %s on %s ", res.StatusCode, res.Status, apiUrl)
+		log.Println("last.fm: postReques err body: ", string(resData))
 		errCode, errMsg := handleError(resData)
 		if errCode == 9 {
 			fmt.Println(errMsg)
@@ -175,7 +174,7 @@ func postRequest(query map[string]interface{}, quitChan chan struct{}) ([]byte, 
 		}
 		return nil, false
 	}
-	log.Println("Post response body: ", string(resData))
+	log.Println("last.fm: postReques response: ", string(resData))
 
 	return resData, true
 }

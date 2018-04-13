@@ -34,9 +34,9 @@ func Init() {
 		return
 	}
 	fmt.Println("Press Enter xiami profile page url")
-	xmUrl, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+	profileUrl, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 
-	parseUrl(xmUrl)
+	parseUrl(profileUrl)
 	return
 }
 
@@ -105,15 +105,15 @@ func GetTracks(playingChan, playedChan chan interface{}) {
 		switch scrobbleType {
 		case typeNowPlaying:
 			playingChan <- t
-			log.Println("GetTrack - playingChan <- t ", t)
+			log.Println("xiami: GetTrack - playingChan <- t ", t)
 		case typePlayed:
 			playedChan <- t
-			log.Println("GetTrack - playedChan <- t ", t)
+			log.Println("xiami: GetTrack - playedChan <- t ", t)
 		default:
-			log.Println("GetTrack - switch default")
+			log.Println("xiami: GetTrack - switch default")
 		}
 	})
-	log.Println("GetTrack returned.")
+	log.Println("xiami: GetTrack returned.")
 	return
 }
 
@@ -157,14 +157,14 @@ func getDoc(url string) (*goquery.Document, error) {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		log.Println(fmt.Sprintf("Fatal: status code error: %d %s on %s", res.StatusCode, res.Status, url))
+		log.Printf("xiami: Fatal: status code error: %d %s on %s\n", res.StatusCode, res.Status, url)
 		return nil, err
 	}
 
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
-		log.Println("Fatal: ", err)
+		log.Println("xiami: Fatal: ", err)
 		return nil, err
 	}
 	return doc, nil

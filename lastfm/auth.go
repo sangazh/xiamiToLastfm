@@ -29,7 +29,7 @@ func Auth() {
 	if !tokenOk {
 		fmt.Println("Fetching last.fm token...")
 		if !getToken() {
-			log.Fatal("Token fetch failed")
+			log.Fatal("last.fm token fetch failed")
 		}
 	}
 
@@ -56,12 +56,12 @@ func checkAuth() (tokenOk, skOk bool) {
 
 	if token != "" && tokenExpired > time.Now().Unix() {
 		tokenOk = true
-		log.Println("Valid token found.")
+		log.Println("last.fm: valid token found.")
 	}
 
 	if sk != "" {
 		skOk = true
-		log.Println("Session key found")
+		log.Println("last.fm: session key found")
 	}
 
 	return
@@ -134,15 +134,15 @@ func getSession() {
 	url := fmt.Sprintf("%s/?%s&format=json", apiUrl, queryString(query))
 	resp, ok := getRequest(url)
 	if !ok {
-		log.Fatal("getSession Failed")
+		log.Fatal("last.fm getSession Failed")
 	}
 
 	key, ok := parseKey(resp)
 	if !ok {
-		log.Fatal("parse session key Failed")
+		log.Fatal("last.fm: parse session key Failed")
 	}
 
-	log.Println("Session Key: ", key)
+	log.Println("last.fm: session Key: ", key)
 
 	viper.Set("lastfm.auth.token", "")
 	viper.Set("lastfm.auth.token_expired", 0)

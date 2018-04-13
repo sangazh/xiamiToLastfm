@@ -16,4 +16,5 @@ cp config.example.toml config.toml
 # Todo
 - 同步虾米收藏的歌曲到last.fm的fav
 - MusicBiz
+- 记录上次执行时间，与虾米页面时间计算，以免重复请求。
 
