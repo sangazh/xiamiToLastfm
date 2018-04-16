@@ -146,11 +146,13 @@ func getSession() {
 	resp, ok := getRequest(requestUrl)
 	if !ok {
 		log.Fatal("last.fm getSession Failed")
+		fmt.Println("last.fm getSession Failed, Please contact the author.")
 	}
 
 	key, ok := parseKey(resp)
 	if !ok {
 		log.Fatal("last.fm: parse session key Failed")
+		fmt.Println("last.fm getSession Failed, Please contact the author.")
 	}
 
 	log.Println("last.fm: session Key: ", key)

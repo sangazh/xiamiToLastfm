@@ -5,7 +5,7 @@ title = "Xiami and Last.fm Example"
 
   [lastfm.auth]
     api_key = "cf83895a868651092661968da89596ce"
-    shared_secret = "55e7379e6dbc6c4ea499aedd352c45d0 "
+    shared_secret = "55e7379e6dbc6c4ea499aedd352c45d0"
     sk = ""
     token = ""
     token_expired = 0
