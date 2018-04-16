@@ -20,6 +20,15 @@ Yet another go project to scrobble your xiami recent songs to last.fm.
 7. Done!
 8. Ctrl+C 退出
 
+# Error
+## 授权失败
+如果报错。
+```
+Invalid session key - Please re-authenticate
+```
+有可能是当前`API key`失效了，你可以联系我，也可以自己去last.fm[创建一个API账户](https://www.last.fm/api/account/create)，
+并将获得的`API key`和`Shared secret`分别填入`config.toml`的`shared_secret`和`api_key`，重新运行即可。
+
 # Todo
 - 同步虾米收藏的歌曲到last.fm的fav
 - MusicBiz
