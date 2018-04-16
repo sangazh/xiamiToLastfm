@@ -53,6 +53,8 @@ func checkAuth() (tokenOk, skOk bool) {
 	token = viper.GetString("lastfm.auth.token")
 	tokenExpired = viper.GetInt64("lastfm.auth.token_expired")
 	sk = viper.GetString("lastfm.auth.sk")
+	sharedSecret = viper.GetString("lastfm.auth.shared_secret")
+	apiKey = viper.GetString("lastfm.auth.api_key")
 
 	if token != "" && tokenExpired > time.Now().Unix() {
 		tokenOk = true

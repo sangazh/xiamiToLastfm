@@ -18,12 +18,7 @@ import (
 )
 
 var (
-	domain, apiUrl string
-)
-
-const (
-	sharedSecret = "bb471918f14e2b29e219185d4591baa6"
-	apiKey       = "4778db9e5d5b2dd00fb34792ac28c1c1"
+	domain, apiUrl, sharedSecret,apiKey  string
 )
 
 type ScrobbleParams struct {
@@ -168,7 +163,7 @@ func postRequest(query string, quitChan chan struct{}) ([]byte, bool) {
 	res, err := http.Post(apiUrl, contentType, r)
 
 	if err != nil {
-		log.Println(err)
+		log.Println("last.fm: postRequest has error: ", err)
 		return nil, false
 	}
 
