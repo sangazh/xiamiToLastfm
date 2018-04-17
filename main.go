@@ -43,8 +43,8 @@ func main() {
 func run() {
 	fmt.Println("start scrobbling...")
 
-	nowPlayingChan := make(chan interface{})
-	playedChan := make(chan interface{}, 10)
+	nowPlayingChan := make(chan xiami.Track)
+	playedChan := make(chan xiami.Track, 10)
 
 	tickerXM := time.NewTicker(time.Minute)
 	quitChan := make(chan struct{})
@@ -108,8 +108,8 @@ func stop(quit chan struct{}) {
 }
 
 func quickStart() {
-	nowPlayingChan := make(chan interface{})
-	playedChan := make(chan interface{}, 10)
+	nowPlayingChan := make(chan xiami.Track)
+	playedChan := make(chan xiami.Track, 10)
 	xiami.GetTracks(nowPlayingChan, playedChan)
 	quitChan := make(chan struct{})
 	stop(quitChan)

@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 	"time"
 
 	"xiamiToLastfm/xiami"
@@ -37,13 +36,9 @@ type ScrobbleParams struct {
 	Method            string   `json:"method"`
 }
 
-func StartScrobble(playedChan chan interface{}, quitChan chan struct{}) bool {
-	t := <-playedChan
-	if t == nil {
-		return false
-	}
+func StartScrobble(playedChan chan xiami.Track, quitChan chan struct{}) bool {
+	xm := <-playedChan
 
-	xm := t.(xiami.Track)
 	log.Println("last.fm: playedChan track: ", xm)
 
 	v := url.Values{}
@@ -95,13 +90,8 @@ func renderScrobbleResp(data []byte) (accepted, ignored int) {
 	return resp.Data.Msg.Accepted, resp.Data.Msg.Ignored
 }
 
-func UpdateNowPlaying(nowPlayingChan chan interface{}, quitChan chan struct{}) bool {
-	t := <-nowPlayingChan
-	if t == nil {
-		return false
-	}
-
-	xm := t.(xiami.Track)
+func UpdateNowPlaying(nowPlayingChan chan xiami.Track, quitChan chan struct{}) bool {
+	xm := <-nowPlayingChan
 	log.Println("last.fm: nowPlayingChan track: ", xm)
 
 	v := url.Values{}
@@ -123,14 +113,6 @@ func UpdateNowPlaying(nowPlayingChan chan interface{}, quitChan chan struct{}) b
 
 	fmt.Printf("last.fm: UpdateNowPlaying success. %s - %s \n", xm.Title, xm.Artist)
 	return true
-}
-
-// query input as map format, expect output with format of key=value&key=value
-func queryString(query map[string]interface{}) (text string) {
-	for key, value := range query {
-		text += fmt.Sprintf("%s=%s&", key, value)
-	}
-	return strings.TrimRight(text, "&")
 }
 
 func getRequest(url string) ([]byte, bool) {

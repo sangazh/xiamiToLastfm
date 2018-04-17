@@ -21,8 +21,8 @@ const (
 )
 
 var (
-	domain, uri, spm string
-	userId           int
+	domain, recentUrl, spm string
+	userId                 int
 )
 
 type Track struct {
@@ -43,7 +43,7 @@ func Init() {
 
 func checkConfig() bool {
 	domain = viper.GetString("xiami.domain")
-	uri = domain + viper.GetString("xiami.url.recent")
+	recentUrl = domain + viper.GetString("xiami.url.recent")
 	userId = viper.GetInt("xiami.user_id")
 	spm = viper.GetString("xiami.spm")
 	if userId > 0 && spm != "" {
@@ -68,10 +68,10 @@ func parseUrl(rawUrl string) (userId, spm string) {
 	return userId, spm
 }
 
-func GetTracks(playingChan, playedChan chan interface{}) {
+func GetTracks(playingChan, playedChan chan Track) {
 	userId = viper.GetInt("xiami.user_id")
 	lastCheckAt := viper.GetInt64("xiami.checked_at")
-	requestUrl := fmt.Sprintf("%s%d", uri, userId)
+	requestUrl := fmt.Sprintf("%s%d", recentUrl, userId)
 
 	doc, err := getDoc(requestUrl)
 	if err != nil || doc == nil {

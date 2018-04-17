@@ -27,32 +27,6 @@ func TestPrepareSigText(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
-func TestQueryString(t *testing.T) {
-	query := map[string]interface{}{
-		"a": "123",
-		"c": "345",
-		"b": "567",
-	}
-	result := queryString(query)
-	expected := "a=123&c=345&b=567"
-	assert.Equal(t, expected, result)
-
-	queryEmpty := make(map[string]interface{})
-	result = queryString(queryEmpty)
-	expected = ""
-	assert.Equal(t, expected, result)
-
-	query = map[string]interface{}{
-		"album[0]": "TVアニメ「血界戦線&BEYOND」オリジナルサウンドトラック",
-		//"c": "345",
-		//"b": "567",
-	}
-
-	result = queryString(query)
-	fmt.Println(result)
-
-}
-
 func TestSignature(t *testing.T) {
 	v := url.Values{}
 	v.Set("method", "auth.getSession")
