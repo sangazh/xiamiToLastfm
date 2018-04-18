@@ -56,6 +56,9 @@ func StartScrobble(playedChan chan xiami.Track, quitChan chan struct{}) bool {
 	respData, ok := postRequest(v.Encode(), quitChan)
 	if !ok {
 		fmt.Println("last.fm: scrobble sent failed. Try later.")
+
+		//if failed, insert back to channel
+		playedChan <- xm
 		return false
 	}
 
@@ -108,6 +111,7 @@ func UpdateNowPlaying(nowPlayingChan chan xiami.Track, quitChan chan struct{}) b
 	_, ok := postRequest(v.Encode(), quitChan)
 	if !ok {
 		fmt.Println("last.fm: UpdateNowPlaying sent failed.")
+		//if failed, as discard.
 		return false
 	}
 
