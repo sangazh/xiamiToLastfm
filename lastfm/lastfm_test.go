@@ -1,13 +1,12 @@
 package lastfm
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"testing"
 
-	"xiami2LastFM/xiami"
+	"xiamiToLastfm/xiami"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -118,7 +117,7 @@ func TestParseKey(t *testing.T) {
 }
 
 func TestStartScrobble(t *testing.T) {
-	playedChan := make(chan interface{}, 10)
+	playedChan := make(chan xiami.Track, 10)
 	quitChan := make(chan struct{})
 	defer close(playedChan)
 	defer close(quitChan)
@@ -140,7 +139,7 @@ func TestStartScrobble(t *testing.T) {
 }
 
 func TestUpdateNowPlaying(t *testing.T) {
-	nowPlayingChan := make(chan interface{}, 10)
+	nowPlayingChan := make(chan xiami.Track, 10)
 	quitChan := make(chan struct{})
 	defer close(nowPlayingChan)
 	defer close(quitChan)

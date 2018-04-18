@@ -30,7 +30,7 @@ Invalid session key - Please re-authenticate
 并将获得的`API key`和`Shared secret`分别填入`config.toml`的`shared_secret`和`api_key`，重新运行即可。
 
 # Todo
-- 同步虾米收藏的歌曲到last.fm的fav
-- MusicBiz
+- ~~同步虾米收藏的歌曲到last.fm的fav~~ 收藏页面404无法访问
+- IDMusicBiz Track
 - 后台跑的进程怎么正常退出？
 
