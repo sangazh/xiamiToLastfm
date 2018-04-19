@@ -31,11 +31,12 @@ func TestSignature(t *testing.T) {
 	v.Set("method", "auth.getSession")
 	v.Set("api_key", "4778db9e5d5b2dd00fb34792ac28c1c1")
 	v.Set("token", "9V6bP2X4OZJcMi7IRz2M50w_IAWxZ1TC")
+	sharedSecret = "bb471918f14e2b29e219185d4591baa6"
 	result := signature(&v)
 	if len(result) != 32 {
 		t.Error(`signature() length not equal to 32`)
 	}
-	expected := `fb441e79f2820ccd7d7bd71174ff34f9` //e05dd3b746c95c6d5d896cd7079757fe
+	expected := `cec68f75b328c48f2749cf6cc6c7e5cb`
 
 	assert.Equal(t, expected, result)
 }
@@ -46,7 +47,7 @@ func TestSignature2(t *testing.T) {
 	v.Set("api_key", "4778db9e5d5b2dd00fb34792ac28c1c1")
 	v.Set("token", "9V6bP2X4OZJcMi7IRz2M50w_IAWxZ1TC")
 	v.Set("album[0]", "TVアニメ「血界戦線&BEYOND」オリジナルサウンドトラック")
-
+	sharedSecret = "bb471918f14e2b29e219185d4591baa6"
 	result := signature(&v)
 
 	if len(result) != 32 {
@@ -70,7 +71,7 @@ func TestScrobbleSignature(t *testing.T) {
 	v.Set("api_key", "4778db9e5d5b2dd00fb34792ac28c1c1")
 	v.Set("sk", "rIr2HM8h5s-_t-5nM0PKzPL8m7tjGxgH")
 	v.Set("method", "track.scrobble")
-
+	sharedSecret = "bb471918f14e2b29e219185d4591baa6"
 	result := signature(&v)
 
 	assert.Equal(t, 32, len(result))
@@ -89,9 +90,9 @@ func TestSignatureWithSpecial(t *testing.T) {
 	v.Set("api_key", apiKey)
 	v.Set("sk", "1hWanAAsPJgERBmM-1jF04GFEjtz4lJG")
 	v.Set("method", "track.scrobble")
-
+	sharedSecret = "bb471918f14e2b29e219185d4591baa6"
 	sig := signature(&v)
-	expected := `0c972ff186af2ee5ce3382ad7e7efa40`
+	expected := `7bb79d9a17dea0a205725c453295e8d6`
 	assert.Equal(t, expected, sig)
 
 	v.Set("api_sig", sig)
