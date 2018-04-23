@@ -116,10 +116,7 @@ func prepareSigText(v url.Values) (text string) {
 	sort.Strings(keys)
 	for _, k := range keys {
 		vs := v[k]
-		//prefix := url.QueryEscape(k)
 		for _, v := range vs {
-			//buf.WriteString(prefix)
-			//buf.WriteString(url.QueryEscape(v))
 			buf.WriteString(k)
 			buf.WriteString(v)
 		}
