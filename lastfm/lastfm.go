@@ -18,8 +18,7 @@ import (
 )
 
 var (
-	domain, sharedSecret, apiKey string
-	apiUrl                       *url.URL
+	domain, apiUrl, sharedSecret, apiKey string
 )
 
 type ScrobbleParams struct {
@@ -134,7 +133,7 @@ func getRequest(url string) ([]byte, error) {
 
 	resData, _ := ioutil.ReadAll(res.Body)
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("status code error: %d %s on %s body: %s", res.StatusCode, res.Status, url, string(resData))
+		return nil, fmt.Errorf("status code error: '%s' on %s body: %s", res.Status, url, string(resData))
 	}
 
 	log.Println("last.fm: getRequest response: ", string(resData))
@@ -146,7 +145,7 @@ func postRequest(query string, quitChan chan struct{}) ([]byte, error) {
 	contentType := "application/x-www-form-urlencoded"
 
 	log.Println("last.fm: postRequest params: ", query)
-	res, err := http.Post(apiUrl.String(), contentType, r)
+	res, err := http.Post(apiUrl, contentType, r)
 
 	if err != nil {
 		return nil, fmt.Errorf("postRequest has error: %s", err)
@@ -164,7 +163,7 @@ func postRequest(query string, quitChan chan struct{}) ([]byte, error) {
 			close(quitChan)
 			os.Exit(1)
 		}
-		return nil, fmt.Errorf("status code error: %d %s on %s. body: %s", res.StatusCode, res.Status, apiUrl, string(resData))
+		return nil, fmt.Errorf("status code error: '%s' on %s body: %s", res.Status, apiUrl, string(resData))
 
 	}
 	log.Println("last.fm: postRequest response: ", string(resData))

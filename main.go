@@ -53,19 +53,6 @@ func run() {
 
 	go func() {
 		for {
-			select {
-			case <-tickerXM.C:
-				xiami.GetTracks(nowPlayingChan, playedChan)
-			case <-quitChan:
-				tickerXM.Stop()
-				windUp(playedChan)
-				os.Exit(1)
-				return
-			}
-		}
-	}()
-	go func() {
-		for {
 			lastfm.StartScrobble(playedChan, quitChan)
 		}
 	}()
@@ -74,8 +61,16 @@ func run() {
 			lastfm.UpdateNowPlaying(nowPlayingChan, quitChan)
 		}
 	}()
+
 	for {
-		time.Sleep(time.Hour)
+		select {
+		case <-tickerXM.C:
+			xiami.GetTracks(nowPlayingChan, playedChan)
+		case <-quitChan:
+			tickerXM.Stop()
+			windUp(playedChan)
+			os.Exit(1)
+		}
 	}
 }
 

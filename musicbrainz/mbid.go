@@ -52,12 +52,12 @@ func getRequest(url string, result interface{}) error {
 	resData, _ := ioutil.ReadAll(res.Body)
 
 	if res.StatusCode != 200 {
-		return fmt.Errorf("musicbrainz: status code error: %d %s on %s. body: %s", res.StatusCode, res.Status, url, string(resData))
+		return fmt.Errorf("status code error: '%s' on %s",  res.Status, url)
 	}
 
 	err = xml.Unmarshal(resData, result)
 	if err != nil {
-		return fmt.Errorf("musicbrainz: xml docode err: %s", err)
+		return fmt.Errorf("xml docode err: %s", err)
 	}
 
 	return nil

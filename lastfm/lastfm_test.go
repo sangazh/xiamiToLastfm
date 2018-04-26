@@ -118,10 +118,6 @@ func TestParseKey(t *testing.T) {
 }
 
 func TestStartScrobble(t *testing.T) {
-	apiUrl, _ = url.Parse("http://ws.audioscrobbler.com/2.0")
-	apiKey = "4778db9e5d5b2dd00fb34792ac28c1c1"
-	token = "9V6bP2X4OZJcMi7IRz2M50w_IAWxZ1TC"
-
 	playedChan := make(chan xiami.Track, 10)
 	quitChan := make(chan struct{})
 	defer close(playedChan)
@@ -185,4 +181,14 @@ func TestHandleError(t *testing.T) {
 	code, msg := handleError(data)
 	assert.Equal(t, 9, code)
 	assert.Equal(t, "Invalid session key - Please re-authenticate", msg)
+}
+
+func TestGetSession(t *testing.T) {
+	getSession()
+}
+
+func init() {
+	apiUrl= "http://ws.audioscrobbler.com/2.0"
+	apiKey = "4778db9e5d5b2dd00fb34792ac28c1c1"
+	token = "9V6bP2X4OZJcMi7IRz2M50w_IAWxZ1TC"
 }

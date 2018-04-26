@@ -75,6 +75,7 @@ func GetTracks(playingChan, playedChan chan Track) {
 
 	doc, err := getDoc(requestUrl)
 	if err != nil || doc == nil {
+		log.Println("xiami:", err)
 		return
 	}
 
@@ -153,14 +154,12 @@ func getDoc(url string) (*goquery.Document, error) {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		log.Printf("xiami: Fatal: status code error: %d %s on %s\n", res.StatusCode, res.Status, url)
-		return nil, err
+		return nil, fmt.Errorf("status code error: '%s' on %s", res.Status, url)
 	}
 
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
-		log.Println("xiami: Fatal: ", err)
 		return nil, err
 	}
 	return doc, nil

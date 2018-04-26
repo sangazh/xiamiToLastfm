@@ -52,8 +52,7 @@ func Auth() {
 
 func checkAuth() (tokenOk, skOk bool) {
 	domain = viper.GetString("lastfm.domain")
-	apiUrl, _ = url.Parse(domain + "/2.0")
-
+	apiUrl = domain + "/2.0"
 	token = viper.GetString("lastfm.auth.token")
 	apiKey = viper.GetString("lastfm.auth.api_key")
 	tokenExpired = viper.GetInt64("lastfm.auth.token_expired")
@@ -144,7 +143,7 @@ func getSession() error {
 	v.Set("api_sig", sig)
 	v.Set("format", "json")
 
-	requestUrl := apiUrl
+	requestUrl, _ := url.Parse(apiUrl)
 	requestUrl.RawQuery = v.Encode()
 	resp, err := getRequest(requestUrl.String())
 

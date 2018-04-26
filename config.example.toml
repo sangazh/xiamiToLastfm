@@ -24,4 +24,3 @@ title = "Xiami and Last.fm Example"
 
   [xiami.url]
     recent = "/space/charts-recent/u/"
-    fav_song = "/space/lib-song/u/"
