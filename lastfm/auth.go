@@ -30,8 +30,8 @@ func Auth() {
 
 	if !tokenOk {
 		fmt.Println("Fetching last.fm token...")
-		if !getToken() {
-			log.Fatal("last.fm token fetch failed")
+		if err := getToken(); err != nil {
+			log.Fatal("last.fm token fetch failed, err: ", err)
 		}
 	}
 
@@ -42,19 +42,23 @@ func Auth() {
 	bufio.NewReader(os.Stdin).ReadBytes('\n')
 
 	//get session and save to the config file
-	getSession()
+	if err := getSession(); err != nil {
+		log.Fatal("lastf.fm getSession err: ", err)
+		fmt.Println("last.fm getSession Failed, Please contact the author.")
+	}
+
 	return
 }
 
 func checkAuth() (tokenOk, skOk bool) {
 	domain = viper.GetString("lastfm.domain")
-	apiUrl = domain + "/2.0"
+	apiUrl, _ = url.Parse(domain + "/2.0")
 
 	token = viper.GetString("lastfm.auth.token")
-	tokenExpired = viper.GetInt64("lastfm.auth.token_expired")
-	sk = viper.GetString("lastfm.auth.sk")
-	sharedSecret = viper.GetString("lastfm.auth.shared_secret")
 	apiKey = viper.GetString("lastfm.auth.api_key")
+	tokenExpired = viper.GetInt64("lastfm.auth.token_expired")
+	sharedSecret = viper.GetString("lastfm.auth.shared_secret")
+	sk = viper.GetString("lastfm.auth.sk")
 
 	if token != "" && tokenExpired > time.Now().Unix() {
 		tokenOk = true
@@ -70,25 +74,27 @@ func checkAuth() (tokenOk, skOk bool) {
 }
 
 // token valid for 60 minutes
-func getToken() (ok bool) {
+func getToken() error {
 	requestUrl := fmt.Sprintf("%s/?method=auth.gettoken&api_key=%s&format=json", apiUrl, apiKey)
-	resp, ok := getRequest(requestUrl)
-	if !ok {
-		return false
+	resp, err := getRequest(requestUrl)
+
+	if err != nil {
+		return err
 	}
 
 	result := toMap(resp)
 
+	ok := false
 	token, ok = result["token"]
 	if !ok {
-		return false
+		return fmt.Errorf("parseToken failed")
 	}
 
 	viper.Set("lastfm.auth.token", token)
 	viper.Set("lastfm.auth.token_expired", time.Now().Add(60 * time.Minute).Unix())
 	viper.WriteConfig()
 
-	return true
+	return nil
 }
 
 //generate signature
@@ -129,7 +135,7 @@ func authPage() string {
 }
 
 // Session keys have an infinite lifetime by default
-func getSession() {
+func getSession() error {
 	v := url.Values{}
 	v.Set("method", "auth.getSession")
 	v.Set("api_key", apiKey)
@@ -138,18 +144,17 @@ func getSession() {
 	v.Set("api_sig", sig)
 	v.Set("format", "json")
 
-	query, _ := url.QueryUnescape(v.Encode())
-	requestUrl := fmt.Sprintf("%s/?%s", apiUrl, query)
-	resp, ok := getRequest(requestUrl)
-	if !ok {
-		log.Fatal("last.fm getSession Failed")
-		fmt.Println("last.fm getSession Failed, Please contact the author.")
+	requestUrl := apiUrl
+	requestUrl.RawQuery = v.Encode()
+	resp, err := getRequest(requestUrl.String())
+
+	if err != nil {
+		return err
 	}
 
 	key, ok := parseKey(resp)
 	if !ok {
-		log.Fatal("last.fm: parse session key Failed")
-		fmt.Println("last.fm getSession Failed, Please contact the author.")
+		return fmt.Errorf("parse session key failed")
 	}
 
 	log.Println("last.fm: session Key: ", key)
@@ -158,18 +163,18 @@ func getSession() {
 	viper.Set("lastfm.auth.token_expired", 0)
 	viper.Set("lastfm.auth.sk", key)
 	viper.WriteConfig()
-	return
-}
-
-type SessionResp struct {
-	Session struct {
-		Name string `json:"name"`
-		Key  string `json:"key"`
-	} `json:"session"`
+	return nil
 }
 
 func parseKey(b []byte) (string, bool) {
-	var s SessionResp
+	type sessionResponse struct {
+		Session struct {
+			Name string `json:"name"`
+			Key  string `json:"key"`
+		} `json:"session"`
+	}
+	var s sessionResponse
+
 	json.Unmarshal(b, &s)
 	if s.Session.Key == "" {
 		return "", false

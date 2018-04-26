@@ -10,6 +10,12 @@ title = "Xiami and Last.fm Example"
     token = ""
     token_expired = 0
 
+[musicbrainz]
+  domain = "http://musicbrainz.org/ws/2"
+
+  [musicbrainz.url]
+    recording = "/recording"
+
 [xiami]
   domain = "http://www.xiami.com"
   spm = ""

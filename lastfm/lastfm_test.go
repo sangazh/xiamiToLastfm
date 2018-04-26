@@ -118,6 +118,10 @@ func TestParseKey(t *testing.T) {
 }
 
 func TestStartScrobble(t *testing.T) {
+	apiUrl, _ = url.Parse("http://ws.audioscrobbler.com/2.0")
+	apiKey = "4778db9e5d5b2dd00fb34792ac28c1c1"
+	token = "9V6bP2X4OZJcMi7IRz2M50w_IAWxZ1TC"
+
 	playedChan := make(chan xiami.Track, 10)
 	quitChan := make(chan struct{})
 	defer close(playedChan)
@@ -136,6 +140,7 @@ func TestStartScrobble(t *testing.T) {
 		Timestamp: 1523327819,
 	}
 	playedChan <- track
+
 	assert.True(t, StartScrobble(playedChan, quitChan))
 }
 
@@ -163,7 +168,7 @@ func TestRenderScrobbleResp(t *testing.T) {
 	}
 	defer r.Close()
 	data, _ := ioutil.ReadAll(r)
-	accepted, ignored := renderScrobbleResp(data)
+	accepted, ignored := scrobbleResponse(data)
 
 	assert.Equal(t, 2, accepted)
 	assert.Equal(t, 0, ignored)

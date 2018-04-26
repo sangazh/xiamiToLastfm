@@ -15,7 +15,7 @@ func TempStore(playedChan chan xiami.Track) bool {
 	fmt.Println("unsent xiami tracks exist, saving to a temp file.")
 	f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
-		log.Println("Temp file create failed. Discard.")
+		log.Println("Temp file create failed. Abort.")
 		return false
 	}
 	defer f.Close()

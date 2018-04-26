@@ -19,8 +19,6 @@ func TestParseTime(t *testing.T) {
 	test := "1分钟前"
 	timestamp, _, _ := parseTime(test)
 	now := time.Now().Truncate(time.Minute).Unix()
-	var expected int64
-	expected = 60
-
+	var expected int64 = 60
 	assert.Equal(t, expected, now-timestamp)
 }

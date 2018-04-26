@@ -12,12 +12,14 @@ import (
 	"time"
 
 	"xiamiToLastfm/xiami"
+	"xiamiToLastfm/musicbrainz"
 
 	"github.com/theherk/viper"
 )
 
 var (
-	domain, apiUrl, sharedSecret,apiKey  string
+	domain, sharedSecret, apiKey string
+	apiUrl                       *url.URL
 )
 
 type ScrobbleParams struct {
@@ -28,7 +30,7 @@ type ScrobbleParams struct {
 	TrackNumber       []string `json:"trackNumber,omitempty"`
 	Mbid              []string `json:"mbid,omitempty"` //The MusicBrainz Track ID
 	AlbumArtist       []string `json:"albumArtist,omitempty"`
-	DurationInSeconds []string `jsonapikey:"duration,omitempty"`
+	DurationInSeconds []string `json:"duration,omitempty"`
 	ApiKey            string   `json:"api_key"`
 	ApiSig            string   `json:"api_sig"`
 	Sk                string   `json:"sk"`
@@ -45,6 +47,11 @@ func StartScrobble(playedChan chan xiami.Track, quitChan chan struct{}) bool {
 	v.Set("artist[0]", xm.Artist)
 	v.Set("album[0]", xm.Album)
 	v.Set("track[0]", xm.Title)
+
+	if mbid, ok := musicbrainz.MbID(xm.Title, xm.Artist, xm.Album); ok {
+		v.Set("mbid[0]", string(mbid))
+	}
+
 	v.Set("timestamp[0]", fmt.Sprint(xm.Timestamp))
 	v.Set("method", "track.scrobble")
 	v.Set("sk", sk)
@@ -53,16 +60,16 @@ func StartScrobble(playedChan chan xiami.Track, quitChan chan struct{}) bool {
 	v.Set("api_sig", sig)
 	v.Set("format", "json")
 
-	respData, ok := postRequest(v.Encode(), quitChan)
-	if !ok {
+	respData, err := postRequest(v.Encode(), quitChan)
+	if err != nil {
+		log.Println("last.fm: ", err)
 		fmt.Println("last.fm: scrobble sent failed. Try later.")
-
 		//if failed, insert back to channel
 		playedChan <- xm
 		return false
 	}
 
-	accepted, ignored := renderScrobbleResp(respData)
+	accepted, ignored := scrobbleResponse(respData)
 	log.Printf("last.fm: Scrobbled succese - accepted: %d, ignored: %d\n", accepted, ignored)
 	fmt.Printf("last.fm: Scrobbled succese. %s - %s \n", xm.Title, xm.Artist)
 
@@ -74,21 +81,17 @@ func StartScrobble(playedChan chan xiami.Track, quitChan chan struct{}) bool {
 	return true
 }
 
-type ScrobbleResponse struct {
-	Data ScrobbleData `json:"scrobbles"`
-}
+func scrobbleResponse(data []byte) (accepted, ignored int) {
+	type response struct {
+		Data struct {
+			Msg struct {
+				Accepted int `json:"accepted"`
+				Ignored  int `json:"ignored"`
+			} `json:"@attr"`
+		} `json:"scrobbles"`
+	}
 
-type ScrobbleData struct {
-	Msg ScrobbleMsg `json:"@attr"`
-}
-
-type ScrobbleMsg struct {
-	Accepted int `json:"accepted"`
-	Ignored  int `json:"ignored"`
-}
-
-func renderScrobbleResp(data []byte) (accepted, ignored int) {
-	var resp ScrobbleResponse
+	var resp response
 	json.Unmarshal(data, &resp)
 	return resp.Data.Msg.Accepted, resp.Data.Msg.Ignored
 }
@@ -108,9 +111,10 @@ func UpdateNowPlaying(nowPlayingChan chan xiami.Track, quitChan chan struct{}) b
 	v.Set("api_sig", sig)
 	v.Set("format", "json")
 
-	_, ok := postRequest(v.Encode(), quitChan)
-	if !ok {
+	_, err := postRequest(v.Encode(), quitChan)
+	if err != nil {
 		fmt.Println("last.fm: UpdateNowPlaying sent failed.")
+		log.Println("last.fm: ", err)
 		//if failed, as discard.
 		return false
 	}
@@ -119,46 +123,39 @@ func UpdateNowPlaying(nowPlayingChan chan xiami.Track, quitChan chan struct{}) b
 	return true
 }
 
-func getRequest(url string) ([]byte, bool) {
+func getRequest(url string) ([]byte, error) {
 	log.Println("last.fm: getRequest url: ", url)
 	res, err := http.Get(url)
 
 	if err != nil {
-		log.Println(err)
-		return nil, false
+		return nil, err
 	}
 	defer res.Body.Close()
 
 	resData, _ := ioutil.ReadAll(res.Body)
-
 	if res.StatusCode != 200 {
-		log.Printf("status code error: %d %s on %s ", res.StatusCode, res.Status, url)
-		log.Println("err body: ", string(resData))
-		return nil, false
+		return nil, fmt.Errorf("status code error: %d %s on %s body: %s", res.StatusCode, res.Status, url, string(resData))
 	}
-	log.Println("last.fm: getRequest response: ", string(resData))
 
-	return resData, true
+	log.Println("last.fm: getRequest response: ", string(resData))
+	return resData, nil
 }
 
-func postRequest(query string, quitChan chan struct{}) ([]byte, bool) {
+func postRequest(query string, quitChan chan struct{}) ([]byte, error) {
 	r := bytes.NewReader([]byte(query))
 	contentType := "application/x-www-form-urlencoded"
 
 	log.Println("last.fm: postRequest params: ", query)
-	res, err := http.Post(apiUrl, contentType, r)
+	res, err := http.Post(apiUrl.String(), contentType, r)
 
 	if err != nil {
-		log.Println("last.fm: postRequest has error: ", err)
-		return nil, false
+		return nil, fmt.Errorf("postRequest has error: %s", err)
 	}
 
 	resData, _ := ioutil.ReadAll(res.Body)
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		log.Printf("last.fm: postRequest status code error: %d %s on %s ", res.StatusCode, res.Status, apiUrl)
-		log.Println("last.fm: postReques err body: ", string(resData))
 		errCode, errMsg := handleError(resData)
 		if errCode == 9 {
 			fmt.Println(errMsg)
@@ -167,11 +164,11 @@ func postRequest(query string, quitChan chan struct{}) ([]byte, bool) {
 			close(quitChan)
 			os.Exit(1)
 		}
+		return nil, fmt.Errorf("status code error: %d %s on %s. body: %s", res.StatusCode, res.Status, apiUrl, string(resData))
 
-		return nil, false
 	}
-	log.Println("last.fm: postReques response: ", string(resData))
-	return resData, true
+	log.Println("last.fm: postRequest response: ", string(resData))
+	return resData, nil
 }
 
 func toMap(byteData []byte) (result map[string]string) {
@@ -180,12 +177,12 @@ func toMap(byteData []byte) (result map[string]string) {
 	return result
 }
 
-type ErrResponse struct {
-	Code int    `json:"error"`
-	Msg  string `json:"message"`
-}
-
 func handleError(errData []byte) (code int, msg string) {
+	type ErrResponse struct {
+		Code int    `json:"error"`
+		Msg  string `json:"message"`
+	}
+
 	var resp ErrResponse
 	json.Unmarshal(errData, &resp)
 	return resp.Code, resp.Msg
