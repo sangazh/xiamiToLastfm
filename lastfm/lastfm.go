@@ -19,6 +19,7 @@ import (
 
 var (
 	domain, apiUrl, sharedSecret, apiKey string
+	QuitChan                             chan struct{}
 )
 
 type ScrobbleParams struct {
@@ -37,7 +38,8 @@ type ScrobbleParams struct {
 	Method            string   `json:"method"`
 }
 
-func StartScrobble(playedChan chan xiami.Track, quitChan chan struct{}) bool {
+//https://www.last.fm/api/show/track.scrobble
+func StartScrobble(playedChan chan xiami.Track) error {
 	xm := <-playedChan
 
 	log.Println("last.fm: playedChan track: ", xm)
@@ -59,25 +61,23 @@ func StartScrobble(playedChan chan xiami.Track, quitChan chan struct{}) bool {
 	v.Set("api_sig", sig)
 	v.Set("format", "json")
 
-	respData, err := postRequest(v.Encode(), quitChan)
+	respData, err := postRequest(v.Encode())
 	if err != nil {
-		log.Println("last.fm: ", err)
-		fmt.Println("last.fm: scrobble sent failed. Try later.")
 		//if failed, insert back to channel
 		playedChan <- xm
-		return false
+		return err
 	}
 
 	accepted, ignored := scrobbleResponse(respData)
 	log.Printf("last.fm: Scrobbled succese - accepted: %d, ignored: %d\n", accepted, ignored)
 	fmt.Printf("last.fm: Scrobbled succese. %s - %s \n", xm.Title, xm.Artist)
 
-	//写下执行时间
+	//write the execute time while channel's empty. To avoid duplicate request to last.fm.
 	if len(playedChan) < 1 {
 		viper.Set("xiami.checked_at", time.Now().Truncate(time.Minute).Unix())
 		viper.WriteConfig()
 	}
-	return true
+	return nil
 }
 
 func scrobbleResponse(data []byte) (accepted, ignored int) {
@@ -95,7 +95,8 @@ func scrobbleResponse(data []byte) (accepted, ignored int) {
 	return resp.Data.Msg.Accepted, resp.Data.Msg.Ignored
 }
 
-func UpdateNowPlaying(nowPlayingChan chan xiami.Track, quitChan chan struct{}) bool {
+//https://www.last.fm/api/show/track.updateNowPlaying
+func UpdateNowPlaying(nowPlayingChan chan xiami.Track) error {
 	xm := <-nowPlayingChan
 	log.Println("last.fm: nowPlayingChan track: ", xm)
 
@@ -110,16 +111,13 @@ func UpdateNowPlaying(nowPlayingChan chan xiami.Track, quitChan chan struct{}) b
 	v.Set("api_sig", sig)
 	v.Set("format", "json")
 
-	_, err := postRequest(v.Encode(), quitChan)
-	if err != nil {
-		fmt.Println("last.fm: UpdateNowPlaying sent failed.")
-		log.Println("last.fm: ", err)
+	if _, err := postRequest(v.Encode()); err != nil {
 		//if failed, as discard.
-		return false
+		return err
 	}
 
 	fmt.Printf("last.fm: UpdateNowPlaying success. %s - %s \n", xm.Title, xm.Artist)
-	return true
+	return nil
 }
 
 func getRequest(url string) ([]byte, error) {
@@ -140,7 +138,7 @@ func getRequest(url string) ([]byte, error) {
 	return resData, nil
 }
 
-func postRequest(query string, quitChan chan struct{}) ([]byte, error) {
+func postRequest(query string) ([]byte, error) {
 	r := bytes.NewReader([]byte(query))
 	contentType := "application/x-www-form-urlencoded"
 
@@ -160,7 +158,7 @@ func postRequest(query string, quitChan chan struct{}) ([]byte, error) {
 			fmt.Println(errMsg)
 			resetAuth()
 			fmt.Println("Config reset. Please re-start the program.")
-			close(quitChan)
+			close(QuitChan)
 			os.Exit(1)
 		}
 		return nil, fmt.Errorf("status code error: '%s' on %s body: %s", res.Status, apiUrl, string(resData))

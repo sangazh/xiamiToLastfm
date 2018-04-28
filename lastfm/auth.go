@@ -21,6 +21,10 @@ var (
 	tokenExpired int64
 )
 
+//Authentication Guide: https://www.last.fm/api/desktopauth
+//Step 1. GetToken
+//Step 2. Authentication by user, direct to user.
+//Step 3. GetSession, with signature
 func Auth() {
 	tokenOk, skOk := checkAuth()
 
@@ -43,10 +47,9 @@ func Auth() {
 
 	//get session and save to the config file
 	if err := getSession(); err != nil {
-		log.Fatal("lastf.fm getSession err: ", err)
 		fmt.Println("last.fm getSession Failed, Please contact the author.")
+		log.Fatal("lastf.fm getSession err: ", err)
 	}
-
 	return
 }
 
@@ -72,6 +75,7 @@ func checkAuth() (tokenOk, skOk bool) {
 	return
 }
 
+// https://www.last.fm/api/show/auth.getToken
 // token valid for 60 minutes
 func getToken() error {
 	requestUrl := fmt.Sprintf("%s/?method=auth.gettoken&api_key=%s&format=json", apiUrl, apiKey)
@@ -92,16 +96,15 @@ func getToken() error {
 	viper.Set("lastfm.auth.token", token)
 	viper.Set("lastfm.auth.token_expired", time.Now().Add(60 * time.Minute).Unix())
 	viper.WriteConfig()
-
 	return nil
 }
 
 //generate signature
 func signature(v *url.Values) (sig string) {
 	ordered := prepareSigText(*v)
-	log.Println("signature - ordered query string ", ordered)
 	text := ordered + sharedSecret
 	log.Println("signature - before md5 ", text)
+
 	data := []byte(text)
 	hashed := md5.Sum(data)
 	return hex.EncodeToString(hashed[:])
@@ -133,6 +136,7 @@ func authPage() string {
 	return fmt.Sprintf("http://www.last.fm/api/auth/?api_key=%s&token=%s", apiKey, token)
 }
 
+// https://www.last.fm/api/show/auth.getSession
 // Session keys have an infinite lifetime by default
 func getSession() error {
 	v := url.Values{}

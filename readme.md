@@ -36,7 +36,6 @@ Invalid session key - Please re-authenticate
 
 # Todo
 
- * [ ] ~~同步虾米收藏的歌曲到last.fm的fav~~ 收藏页面404无法访问
- * [x]  MusicBiz Track ID
+ * [x] MusicBiz Track ID
  * [ ] 后台跑的进程怎么正常退出？
 

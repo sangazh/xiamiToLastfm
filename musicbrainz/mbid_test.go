@@ -5,7 +5,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSearch(t *testing.T) {
+func TestSearchMbID(t *testing.T) {
 	title := "武士"
 	artist := "吉田潔"
 	album := "武士~もののふ"

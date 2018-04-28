@@ -10,6 +10,7 @@ import (
 	"github.com/theherk/viper"
 )
 
+// get record's MBID from its title, artist and album.
 func MbID(title, artist, album string) (id MBID, ok bool) {
 	requestUrl := prepareUrl(title, artist, album)
 	res, err := SearchRecording(requestUrl)
@@ -52,7 +53,7 @@ func getRequest(url string, result interface{}) error {
 	resData, _ := ioutil.ReadAll(res.Body)
 
 	if res.StatusCode != 200 {
-		return fmt.Errorf("status code error: '%s' on %s",  res.Status, url)
+		return fmt.Errorf("status code error: '%s' on %s", res.Status, url)
 	}
 
 	err = xml.Unmarshal(resData, result)

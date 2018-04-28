@@ -9,10 +9,10 @@ import (
 	"time"
 )
 
-func Logger(debug bool) (f *os.File) {
+func Logger(debug bool) (f *os.File, err error) {
 	if !debug {
 		log.SetOutput(ioutil.Discard)
-		return nil
+		return
 	}
 
 	date := time.Now().Format("2006-01-02")
@@ -23,12 +23,11 @@ func Logger(debug bool) (f *os.File) {
 		os.Mkdir(logPath, os.ModePerm)
 	}
 
-	f, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-
+	f, err = os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
 
 	log.SetOutput(f)
-	return f
+	return f, nil
 }

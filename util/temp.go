@@ -7,16 +7,16 @@ import (
 	"log"
 	"fmt"
 	"bufio"
+	"errors"
 )
 
 var file = "temp.txt"
 
-func TempStore(playedChan chan xiami.Track) bool {
+func TempStore(playedChan chan xiami.Track) error {
 	fmt.Println("unsent xiami tracks exist, saving to a temp file.")
 	f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
-		log.Println("Temp file create failed. Abort.")
-		return false
+		return errors.New("temp file create failed")
 	}
 	defer f.Close()
 
@@ -28,14 +28,13 @@ func TempStore(playedChan chan xiami.Track) bool {
 		f.WriteString("\n")
 	}
 	log.Println("Temp file created: ", file)
-	return true
+	return nil
 }
 
-func TempRead(playedChan chan xiami.Track) bool {
+func TempRead(playedChan chan xiami.Track) error {
 	f, err := os.OpenFile(file, os.O_RDONLY, 0666)
-
 	if err != nil {
-		return false
+		return errors.New("temp file read failed")
 	}
 
 	fmt.Println("previous unsent xiami tracks detected, will send to server later.")
@@ -47,8 +46,9 @@ func TempRead(playedChan chan xiami.Track) bool {
 		playedChan <- t
 	}
 	f.Close()
+
 	os.Remove(file)
 	log.Println("Temp file removed: ", file)
-	return true
+	return nil
 
 }

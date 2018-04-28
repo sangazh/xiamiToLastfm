@@ -11,6 +11,7 @@ import (
 	"xiamiToLastfm/lastfm"
 	"xiamiToLastfm/util"
 	"xiamiToLastfm/xiami"
+	"log"
 )
 
 var debug bool
@@ -22,9 +23,7 @@ func init() {
 }
 
 func main() {
-	f := util.Logger(debug)
-
-	if f != nil {
+	if f, _ := util.Logger(debug); f != nil {
 		defer f.Close()
 	}
 
@@ -35,7 +34,6 @@ func main() {
 
 func run() {
 	fmt.Println("start scrobbling...")
-
 	nowPlayingChan := make(chan xiami.Track)
 	playedChan := make(chan xiami.Track, 10)
 	defer func() {
@@ -44,21 +42,30 @@ func run() {
 	}()
 
 	go func() {
-		util.TempRead(playedChan)
+		if err := util.TempRead(playedChan); err != nil {
+			log.Println(err)
+		}
 	}()
 
 	tickerXM := time.NewTicker(time.Minute)
 	quitChan := make(chan struct{})
+	lastfm.QuitChan = quitChan
 	stop(quitChan)
 
 	go func() {
 		for {
-			lastfm.StartScrobble(playedChan, quitChan)
+			if err := lastfm.StartScrobble(playedChan); err != nil {
+				fmt.Println("last.fm: scrobble sent failed. Try later.")
+				log.Println("last.fm: ", err)
+			}
 		}
 	}()
 	go func() {
 		for {
-			lastfm.UpdateNowPlaying(nowPlayingChan, quitChan)
+			if err := lastfm.UpdateNowPlaying(nowPlayingChan); err != nil {
+				fmt.Println("last.fm: updateNowPlaying sent failed.")
+				log.Println("last.fm: ", err)
+			}
 		}
 	}()
 
@@ -101,6 +108,8 @@ func stop(quit chan struct{}) {
 
 func windUp(playedChan chan xiami.Track) {
 	if len(playedChan) > 0 {
-		util.TempStore(playedChan)
+		if err := util.TempStore(playedChan); err != nil {
+			log.Println(err)
+		}
 	}
 }

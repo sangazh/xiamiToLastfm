@@ -68,7 +68,8 @@ func parseUrl(rawUrl string) (userId, spm string) {
 	return userId, spm
 }
 
-func GetTracks(playingChan, playedChan chan Track) {
+// Access user's recent track page.
+func GetTracks(playingChan, playedChan chan Track) error {
 	userId = viper.GetInt("xiami.user_id")
 	lastCheckAt := viper.GetInt64("xiami.checked_at")
 	requestUrl := fmt.Sprintf("%s%d", recentUrl, userId)
@@ -76,20 +77,23 @@ func GetTracks(playingChan, playedChan chan Track) {
 	doc, err := getDoc(requestUrl)
 	if err != nil || doc == nil {
 		log.Println("xiami:", err)
-		return
+		return err
 	}
 
-	// Find the review items
+	// Find the track list
 	doc.Find(".track_list tr").Each(func(i int, s *goquery.Selection) {
 		trackTime := s.Find(".track_time").Text()
 		timeStamp, scrobbleType, ok := parseTime(trackTime)
 
+		// compare with last record check time, if before, means scrobbles are up to date.
 		if !ok || timeStamp < lastCheckAt {
 			return
 		}
 
 		title, _ := s.Find(".song_name a").Attr("title")
 		trackUrl, _ := s.Find(".song_name a").Attr("href")
+
+		//find record's artist and album from its' detail page, as artist and album are required.
 		artist, album, ok := getAlbum(trackUrl)
 		if !ok {
 			return
@@ -111,18 +115,21 @@ func GetTracks(playingChan, playedChan chan Track) {
 		}
 	})
 	log.Println("xiami: GetTrack returned.")
-	return
+	return nil
 }
 
-// if time before 1 hour, then exact time cannot calculated, abort
+// if time before 1 hour, then exact time cannot be calculated, abort
 func parseTime(s string) (t int64, srbType int, ok bool) {
-	if strings.HasSuffix(s, "分钟前") { //播放完毕可以同步
+	//播放完毕可以同步
+	if strings.HasSuffix(s, "分钟前") {
 		minutes, _ := strconv.Atoi(strings.TrimSuffix(s, "分钟前"))
 		duration := - time.Minute * time.Duration(minutes)
 		t := time.Now().Add(duration)
 		return t.Truncate(time.Minute).Unix(), typePlayed, true
 	}
-	if strings.HasSuffix(s, "刚刚") || strings.HasSuffix(s, "秒前") { //正在播放
+
+	//正在播放
+	if strings.HasSuffix(s, "刚刚") || strings.HasSuffix(s, "秒前") {
 		return time.Now().Unix(), typeNowPlaying, true
 	}
 	return 0, 0, false
@@ -153,6 +160,7 @@ func getDoc(url string) (*goquery.Document, error) {
 		return nil, err
 	}
 	defer res.Body.Close()
+
 	if res.StatusCode != 200 {
 		return nil, fmt.Errorf("status code error: '%s' on %s", res.Status, url)
 	}
