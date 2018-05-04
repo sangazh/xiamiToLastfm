@@ -17,11 +17,13 @@ import (
 	"github.com/theherk/viper"
 )
 
+// QuitChan: an empty channel used to signal main channel to stop.
 var (
 	domain, apiUrl, sharedSecret, apiKey string
 	QuitChan                             chan struct{}
 )
 
+// https://www.last.fm/api/show/track.scrobble
 type ScrobbleParams struct {
 	Artist            []string `json:"artist,omitempty"`
 	Track             []string `json:"track,omitempty"`
@@ -38,7 +40,8 @@ type ScrobbleParams struct {
 	Method            string   `json:"method"`
 }
 
-//https://www.last.fm/api/show/track.scrobble
+// Send scrobble info to last.fm server
+// https://www.last.fm/api/show/track.scrobble
 func StartScrobble(playedChan chan xiami.Track) error {
 	xm := <-playedChan
 
@@ -95,7 +98,8 @@ func scrobbleResponse(data []byte) (accepted, ignored int) {
 	return resp.Data.Msg.Accepted, resp.Data.Msg.Ignored
 }
 
-//https://www.last.fm/api/show/track.updateNowPlaying
+// Update nowplaying
+// https://www.last.fm/api/show/track.updateNowPlaying
 func UpdateNowPlaying(nowPlayingChan chan xiami.Track) error {
 	xm := <-nowPlayingChan
 	log.Println("last.fm: nowPlayingChan track: ", xm)

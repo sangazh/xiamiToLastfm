@@ -1,29 +1,23 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"xiamiToLastfm/lastfm"
-	"xiamiToLastfm/util"
-	"xiamiToLastfm/xiami"
 	"log"
+	"flag"
+
+	"xiamiToLastfm/app"
+	"xiamiToLastfm/lastfm"
+	"xiamiToLastfm/xiami"
 )
 
 var debug bool
 
-func init() {
-	flag.BoolVar(&debug, "d", false, "debug mode, will export logs to file")
-	flag.Parse()
-	util.InitConfig()
-}
-
 func main() {
-	if f, _ := util.Logger(debug); f != nil {
+	if f, _ := app.Logger(debug); f != nil {
 		defer f.Close()
 	}
 
@@ -33,24 +27,24 @@ func main() {
 }
 
 func run() {
+	tickerXM := time.NewTicker(time.Minute)
+
 	fmt.Println("start scrobbling...")
 	nowPlayingChan := make(chan xiami.Track)
 	playedChan := make(chan xiami.Track, 10)
 	defer func() {
 		close(nowPlayingChan)
-		close(playedChan)
 	}()
 
-	go func() {
-		if err := util.TempRead(playedChan); err != nil {
-			log.Println(err)
-		}
-	}()
-
-	tickerXM := time.NewTicker(time.Minute)
 	quitChan := make(chan struct{})
 	lastfm.QuitChan = quitChan
 	stop(quitChan)
+
+	go func() {
+		if err := app.TempRead(playedChan); err != nil {
+			log.Println(err)
+		}
+	}()
 
 	go func() {
 		for {
@@ -76,9 +70,15 @@ func run() {
 		case <-quitChan:
 			tickerXM.Stop()
 			windUp(playedChan)
-			os.Exit(1)
+			os.Exit(0)
 		}
 	}
+}
+
+func init() {
+	flag.BoolVar(&debug, "d", false, "debug mode, will export logs to file")
+	flag.Parse()
+	app.InitConfig()
 }
 
 func prepare() {
@@ -86,6 +86,8 @@ func prepare() {
 	lastfm.Auth()
 }
 
+// delayStart will delay the program a few seconds and start at exact next minute,
+// to ensure time calculated from xiami page will be relatively accurate.
 func delayStart() {
 	now := time.Now()
 	start := now.Truncate(time.Minute).Add(time.Minute)
@@ -95,6 +97,7 @@ func delayStart() {
 	time.Sleep(time.Duration(sleep))
 }
 
+// Detect Ctrl+C keyboard interruption and set quit signal to quitChan.
 func stop(quit chan struct{}) {
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -106,9 +109,10 @@ func stop(quit chan struct{}) {
 	}()
 }
 
+// Before the program quit, if scrobble play chan is not empty, save to a temp file.
 func windUp(playedChan chan xiami.Track) {
 	if len(playedChan) > 0 {
-		if err := util.TempStore(playedChan); err != nil {
+		if err := app.TempStore(playedChan); err != nil {
 			log.Println(err)
 		}
 	}

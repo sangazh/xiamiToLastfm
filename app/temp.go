@@ -1,4 +1,4 @@
-package util
+package app
 
 import (
 	"xiamiToLastfm/xiami"
@@ -12,6 +12,8 @@ import (
 
 var file = "temp.txt"
 
+// If program quit before messages in channel completely processed,
+// the messages will be saved to a temp file, and processed next time when the program start.
 func TempStore(playedChan chan xiami.Track) error {
 	fmt.Println("unsent xiami tracks exist, saving to a temp file.")
 	f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY, 0666)
@@ -31,10 +33,12 @@ func TempStore(playedChan chan xiami.Track) error {
 	return nil
 }
 
+// While program start, if a temp file detected and successful loaded,
+// the messages will be added to the channel and processed soon.
 func TempRead(playedChan chan xiami.Track) error {
 	f, err := os.OpenFile(file, os.O_RDONLY, 0666)
 	if err != nil {
-		return errors.New("temp file read failed")
+		return errors.New("temp file not found")
 	}
 
 	fmt.Println("previous unsent xiami tracks detected, will send to server later.")

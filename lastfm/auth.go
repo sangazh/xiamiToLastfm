@@ -21,10 +21,11 @@ var (
 	tokenExpired int64
 )
 
-//Authentication Guide: https://www.last.fm/api/desktopauth
-//Step 1. GetToken
-//Step 2. Authentication by user, direct to user.
-//Step 3. GetSession, with signature
+// Authentication Guide:
+// https://www.last.fm/api/desktopauth
+// Step 1. GetToken
+// Step 2. Authentication by user, direct to user.
+// Step 3. GetSession, with signature
 func Auth() {
 	tokenOk, skOk := checkAuth()
 
@@ -99,7 +100,7 @@ func getToken() error {
 	return nil
 }
 
-//generate signature
+// generate signature
 func signature(v *url.Values) (sig string) {
 	ordered := prepareSigText(*v)
 	text := ordered + sharedSecret
@@ -110,7 +111,7 @@ func signature(v *url.Values) (sig string) {
 	return hex.EncodeToString(hashed[:])
 }
 
-//sort query first, then return string with format of <key><value>
+// sort query first, then return string with format of <key><value>
 func prepareSigText(v url.Values) (text string) {
 	if v == nil {
 		return ""

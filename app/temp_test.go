@@ -1,4 +1,4 @@
-package util
+package app
 
 import (
 	"testing"
@@ -23,12 +23,12 @@ func TestTempStore(t *testing.T) {
 		Timestamp: 1523327819,
 	}
 	playedChan <- track
-	assert.True(t, TempStore(playedChan))
+	assert.True(t, TempStore(playedChan) == nil)
 }
 
 func TestTempRead(t *testing.T) {
 	playedChan := make(chan xiami.Track, 10)
 	defer close(playedChan)
-	assert.True(t, TempRead(playedChan))
+	assert.True(t, TempRead(playedChan) == nil)
 	assert.Equal(t, 2, len(playedChan))
 }

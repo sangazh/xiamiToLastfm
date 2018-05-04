@@ -1,4 +1,4 @@
-package util
+package app
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// Set log file path, if debug mode is off, treat it as discarded.
 func Logger(debug bool) (f *os.File, err error) {
 	if !debug {
 		log.SetOutput(ioutil.Discard)

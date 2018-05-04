@@ -30,6 +30,7 @@ type Track struct {
 	Timestamp            int64
 }
 
+// Get xiami user id from user's profile page url
 func Init() {
 	if checkConfig() {
 		return
@@ -52,7 +53,7 @@ func checkConfig() bool {
 	return false
 }
 
-//parseUrl and save to config
+// parseUrl and save to config
 func parseUrl(rawUrl string) (userId, spm string) {
 	u, _ := url.Parse(rawUrl)
 	spm = u.Query().Get("spm")
@@ -76,7 +77,7 @@ func GetTracks(playingChan, playedChan chan Track) error {
 
 	doc, err := getDoc(requestUrl)
 	if err != nil || doc == nil {
-		log.Println("xiami:", err)
+		log.Println("xiami.GetTracks:", err)
 		return err
 	}
 
@@ -105,16 +106,17 @@ func GetTracks(playingChan, playedChan chan Track) error {
 		case typeNowPlaying:
 			playingChan <- t
 			fmt.Printf("nowPlaying: %s - %s 《%s》 \n", title, artist, album)
-			log.Println("xiami: GetTrack - playingChan <- t ", t)
+			log.Println("xiami.GetTracks: playingChan <- t ", t)
 		case typePlayed:
 			playedChan <- t
 			fmt.Printf("Listened: %d: %s - %s 《%s》 \n", i, title, artist, album)
-			log.Println("xiami: GetTrack - playedChan <- t ", t)
+			log.Println("xiami.GetTracks: playedChan <- t ", t)
 		default:
-			log.Println("xiami: GetTrack - switch default")
+			log.Println("xiami.GetTracks: switch default")
 		}
+
 	})
-	log.Println("xiami: GetTrack returned.")
+	log.Println("xiami.GetTracks returned.")
 	return nil
 }
 
@@ -135,9 +137,13 @@ func parseTime(s string) (t int64, srbType int, ok bool) {
 	return 0, 0, false
 }
 
-func getAlbum(url string) (artist, album string, ok bool) {
-	doc, err := getDoc(fmt.Sprintf("%s%s", domain, url))
-	if err != nil || doc == nil {
+func getAlbum(uri string) (artist, album string, ok bool) {
+	doc, err := getDoc(fmt.Sprintf("%s%s", domain, uri))
+	if err != nil {
+		log.Println("xiami.getAlbum:", err)
+		return "", "", false
+	}
+	if doc == nil {
 		return "", "", false
 	}
 
@@ -148,15 +154,20 @@ func getAlbum(url string) (artist, album string, ok bool) {
 		info = append(info, title)
 	})
 
+	fmt.Println(info)
+	if len(info) < 2 {
+		return "", "", false
+	}
+
 	return info[1], info[0], true
 }
 
 func getDoc(url string) (*goquery.Document, error) {
-	log.Println("xiami: getDoc url: ", url)
+	log.Println("xiami.getDoc url:", url)
 	res, err := http.Get(url)
 
 	if err != nil {
-		log.Println("Fatal: ", err)
+		log.Println("xiami.getDoc Fatal: ", err)
 		return nil, err
 	}
 	defer res.Body.Close()
