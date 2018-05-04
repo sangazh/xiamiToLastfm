@@ -21,8 +21,8 @@ const (
 )
 
 var (
-	domain, recentUrl, spm string
-	userId                 int
+	domain, spm string
+	userId      int
 )
 
 type Track struct {
@@ -44,7 +44,6 @@ func Init() {
 
 func checkConfig() bool {
 	domain = viper.GetString("xiami.domain")
-	recentUrl = domain + viper.GetString("xiami.url.recent")
 	userId = viper.GetInt("xiami.user_id")
 	spm = viper.GetString("xiami.spm")
 	if userId > 0 && spm != "" {
@@ -71,11 +70,13 @@ func parseUrl(rawUrl string) (userId, spm string) {
 
 // Access user's recent track page.
 func GetTracks(playingChan, playedChan chan Track) error {
-	userId = viper.GetInt("xiami.user_id")
+	recentUri := viper.GetString("xiami.url.recent")
 	lastCheckAt := viper.GetInt64("xiami.checked_at")
-	requestUrl := fmt.Sprintf("%s%d", recentUrl, userId)
 
-	doc, err := getDoc(requestUrl)
+	recentUrl, _ := url.Parse(domain)
+	recentUrl.Path += recentUri + fmt.Sprint(userId)
+
+	doc, err := getDoc(recentUrl)
 	if err != nil || doc == nil {
 		log.Println("xiami.GetTracks:", err)
 		return err
@@ -96,6 +97,8 @@ func GetTracks(playingChan, playedChan chan Track) error {
 
 		//find record's artist and album from its' detail page, as artist and album are required.
 		artist, album, ok := getAlbum(trackUrl)
+		time.Sleep(2 * time.Second)
+
 		if !ok {
 			return
 		}
@@ -114,7 +117,6 @@ func GetTracks(playingChan, playedChan chan Track) error {
 		default:
 			log.Println("xiami.GetTracks: switch default")
 		}
-
 	})
 	log.Println("xiami.GetTracks returned.")
 	return nil
@@ -138,7 +140,10 @@ func parseTime(s string) (t int64, srbType int, ok bool) {
 }
 
 func getAlbum(uri string) (artist, album string, ok bool) {
-	doc, err := getDoc(fmt.Sprintf("%s%s", domain, uri))
+	songUrl, _ := url.Parse(domain)
+	songUrl.Path += uri
+
+	doc, err := getDoc(songUrl)
 	if err != nil {
 		log.Println("xiami.getAlbum:", err)
 		return "", "", false
@@ -162,9 +167,13 @@ func getAlbum(uri string) (artist, album string, ok bool) {
 	return info[1], info[0], true
 }
 
-func getDoc(url string) (*goquery.Document, error) {
-	log.Println("xiami.getDoc url:", url)
-	res, err := http.Get(url)
+func getDoc(u *url.URL) (*goquery.Document, error) {
+	v := url.Values{}
+	v.Set("spm", spm)
+	u.RawQuery = v.Encode()
+
+	log.Println("xiami.getDoc url:", u)
+	res, err := http.Get(u.String())
 
 	if err != nil {
 		log.Println("xiami.getDoc Fatal: ", err)
@@ -173,7 +182,7 @@ func getDoc(url string) (*goquery.Document, error) {
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("status code error: '%s' on %s", res.Status, url)
+		return nil, fmt.Errorf("status code error: '%s' on %s", res.Status, u)
 	}
 
 	// Load the HTML document

@@ -15,6 +15,7 @@ import (
 )
 
 var debug bool
+var frequency = time.Minute
 
 func main() {
 	if f, _ := app.Logger(debug); f != nil {
@@ -27,13 +28,14 @@ func main() {
 }
 
 func run() {
-	tickerXM := time.NewTicker(time.Minute)
+	tickerXM := time.NewTicker(frequency)
 
 	fmt.Println("start scrobbling...")
 	nowPlayingChan := make(chan xiami.Track)
 	playedChan := make(chan xiami.Track, 10)
 	defer func() {
 		close(nowPlayingChan)
+		close(playedChan)
 	}()
 
 	quitChan := make(chan struct{})
@@ -51,6 +53,7 @@ func run() {
 			if err := lastfm.StartScrobble(playedChan); err != nil {
 				fmt.Println("last.fm: scrobble sent failed. Try later.")
 				log.Println("last.fm: ", err)
+				time.Sleep(time.Second)
 			}
 		}
 	}()
@@ -77,7 +80,11 @@ func run() {
 
 func init() {
 	flag.BoolVar(&debug, "d", false, "debug mode, will export logs to file")
+	minute := flag.Uint64("m", 1, "how often to check the xiami page. unit: minute")
 	flag.Parse()
+
+	frequency *= time.Duration(*minute)
+
 	app.InitConfig()
 }
 
