@@ -24,4 +24,5 @@ Yet another go project to scrobble your xiami recent songs to last.fm.
 
  * [x] MusicBiz Track ID
  * [ ] 后台跑的进程怎么正常退出？
+ * [ ] 虾米album拿不到通过MusicBiz去查
 
