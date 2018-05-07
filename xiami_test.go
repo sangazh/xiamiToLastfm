@@ -17,5 +17,5 @@ func TestGetTracks(t *testing.T) {
 		close(playedChan)
 	}()
 
-	xiami.GetTracks(nowPlayingChan, playedChan)
+	xiami.Tracks(nowPlayingChan, playedChan)
 }

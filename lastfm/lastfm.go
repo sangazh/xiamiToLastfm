@@ -42,10 +42,10 @@ type ScrobbleParams struct {
 
 // Send scrobble info to last.fm server
 // https://www.last.fm/api/show/track.scrobble
-func StartScrobble(playedChan chan xiami.Track) error {
+func Scrobble(playedChan chan xiami.Track) error {
 	xm := <-playedChan
 
-	log.Println("last.fm: playedChan track: ", xm)
+	log.Println("lastfm.Scrobble playedChan track: ", xm)
 
 	v := url.Values{}
 	v.Set("artist[0]", xm.Artist)
@@ -72,7 +72,7 @@ func StartScrobble(playedChan chan xiami.Track) error {
 	}
 
 	accepted, ignored := scrobbleResponse(respData)
-	log.Printf("last.fm: Scrobbled succese - accepted: %d, ignored: %d\n", accepted, ignored)
+	log.Printf("last.fm: Scrobble succese: accepted - %d, ignored - %d\n", accepted, ignored)
 	fmt.Printf("last.fm: Scrobbled succese. %s - %s \n", xm.Title, xm.Artist)
 
 	//write the execute time while channel's empty. To avoid duplicate request to last.fm.

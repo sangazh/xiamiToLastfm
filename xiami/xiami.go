@@ -69,16 +69,16 @@ func parseUrl(rawUrl string) (userId, spm string) {
 }
 
 // Access user's recent track page.
-func GetTracks(playingChan, playedChan chan Track) error {
+func Tracks(playingChan, playedChan chan Track) error {
 	recentUri := viper.GetString("xiami.url.recent")
 	lastCheckAt := viper.GetInt64("xiami.checked_at")
 
 	recentUrl, _ := url.Parse(domain)
 	recentUrl.Path += recentUri + fmt.Sprint(userId)
 
-	doc, err := getDoc(recentUrl)
+	doc, err := document(recentUrl)
 	if err != nil || doc == nil {
-		log.Println("xiami.GetTracks:", err)
+		log.Println("xiami.Tracks:", err)
 		return err
 	}
 
@@ -96,7 +96,7 @@ func GetTracks(playingChan, playedChan chan Track) error {
 		trackUrl, _ := s.Find(".song_name a").Attr("href")
 
 		//find record's artist and album from its' detail page, as artist and album are required.
-		artist, album, ok := getAlbum(trackUrl)
+		artist, album, ok := album(trackUrl)
 		time.Sleep(2 * time.Second)
 
 		if !ok {
@@ -109,16 +109,16 @@ func GetTracks(playingChan, playedChan chan Track) error {
 		case typeNowPlaying:
 			playingChan <- t
 			fmt.Printf("nowPlaying: %s - %s 《%s》 \n", title, artist, album)
-			log.Println("xiami.GetTracks: playingChan <- t ", t)
+			log.Println("xiami.Tracks: playingChan <- t ", t)
 		case typePlayed:
 			playedChan <- t
 			fmt.Printf("Listened: %d: %s - %s 《%s》 \n", i, title, artist, album)
-			log.Println("xiami.GetTracks: playedChan <- t ", t)
+			log.Println("xiami.Tracks: playedChan <- t ", t)
 		default:
-			log.Println("xiami.GetTracks: switch default")
+			log.Println("xiami.Tracks: switch default")
 		}
 	})
-	log.Println("xiami.GetTracks returned.")
+	log.Println("xiami.Tracks returned.")
 	return nil
 }
 
@@ -139,13 +139,13 @@ func parseTime(s string) (t int64, srbType int, ok bool) {
 	return 0, 0, false
 }
 
-func getAlbum(uri string) (artist, album string, ok bool) {
+func album(uri string) (artist, album string, ok bool) {
 	songUrl, _ := url.Parse(domain)
 	songUrl.Path += uri
 
-	doc, err := getDoc(songUrl)
+	doc, err := document(songUrl)
 	if err != nil {
-		log.Println("xiami.getAlbum:", err)
+		log.Println("xiami.album:", err)
 		return "", "", false
 	}
 	if doc == nil {
@@ -159,7 +159,6 @@ func getAlbum(uri string) (artist, album string, ok bool) {
 		info = append(info, title)
 	})
 
-	fmt.Println(info)
 	if len(info) < 2 {
 		return "", "", false
 	}
@@ -167,16 +166,16 @@ func getAlbum(uri string) (artist, album string, ok bool) {
 	return info[1], info[0], true
 }
 
-func getDoc(u *url.URL) (*goquery.Document, error) {
+func document(u *url.URL) (*goquery.Document, error) {
 	v := url.Values{}
 	v.Set("spm", spm)
 	u.RawQuery = v.Encode()
 
-	log.Println("xiami.getDoc url:", u)
+	log.Println("xiami.document url:", u)
 	res, err := http.Get(u.String())
 
 	if err != nil {
-		log.Println("xiami.getDoc Fatal: ", err)
+		log.Println("xiami.document Fatal: ", err)
 		return nil, err
 	}
 	defer res.Body.Close()

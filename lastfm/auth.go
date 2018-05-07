@@ -36,7 +36,7 @@ func Auth() {
 	if !tokenOk {
 		fmt.Println("Fetching last.fm token...")
 		if err := getToken(); err != nil {
-			log.Fatal("last.fm token fetch failed, err: ", err)
+			log.Fatal("last.fm: token fetch failed, err: ", err)
 		}
 	}
 
@@ -47,9 +47,9 @@ func Auth() {
 	bufio.NewReader(os.Stdin).ReadBytes('\n')
 
 	//get session and save to the config file
-	if err := getSession(); err != nil {
-		fmt.Println("last.fm getSession Failed, Please contact the author.")
-		log.Fatal("lastf.fm getSession err: ", err)
+	if err := session(); err != nil {
+		fmt.Println("last.fm session fetch failed, Please contact the author.")
+		log.Fatal("last.fm: session err: ", err)
 	}
 	return
 }
@@ -65,12 +65,12 @@ func checkAuth() (tokenOk, skOk bool) {
 
 	if token != "" && tokenExpired > time.Now().Unix() {
 		tokenOk = true
-		log.Println("last.fm: valid token found.")
+		log.Println("last.fm token found.")
 	}
 
 	if sk != "" {
 		skOk = true
-		log.Println("last.fm: session key found")
+		log.Println("last.fm session key found")
 	}
 
 	return
@@ -104,7 +104,7 @@ func getToken() error {
 func signature(v *url.Values) (sig string) {
 	ordered := prepareSigText(*v)
 	text := ordered + sharedSecret
-	log.Println("signature - before md5 ", text)
+	log.Println("last.fm: signature - before md5 ", text)
 
 	data := []byte(text)
 	hashed := md5.Sum(data)
@@ -139,9 +139,9 @@ func authPage() string {
 
 // https://www.last.fm/api/show/auth.getSession
 // Session keys have an infinite lifetime by default
-func getSession() error {
+func session() error {
 	v := url.Values{}
-	v.Set("method", "auth.getSession")
+	v.Set("method", "auth.session")
 	v.Set("api_key", apiKey)
 	v.Set("token", token)
 	sig := signature(&v)
@@ -161,7 +161,7 @@ func getSession() error {
 		return fmt.Errorf("parse session key failed")
 	}
 
-	log.Println("last.fm: session Key: ", key)
+	log.Println("last.fm session Key:", key)
 
 	viper.Set("lastfm.auth.token", "")
 	viper.Set("lastfm.auth.token_expired", 0)

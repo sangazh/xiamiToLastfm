@@ -50,7 +50,7 @@ func run() {
 
 	go func() {
 		for {
-			if err := lastfm.StartScrobble(playedChan); err != nil {
+			if err := lastfm.Scrobble(playedChan); err != nil {
 				fmt.Println("last.fm: scrobble sent failed. Try later.")
 				log.Println("last.fm: ", err)
 				time.Sleep(time.Second)
@@ -69,7 +69,7 @@ func run() {
 	for {
 		select {
 		case <-tickerXM.C:
-			xiami.GetTracks(nowPlayingChan, playedChan)
+			xiami.Tracks(nowPlayingChan, playedChan)
 		case <-quitChan:
 			tickerXM.Stop()
 			windUp(playedChan)

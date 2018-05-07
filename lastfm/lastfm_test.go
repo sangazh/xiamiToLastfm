@@ -28,7 +28,7 @@ func TestPrepareSigText(t *testing.T) {
 
 func TestSignature(t *testing.T) {
 	v := url.Values{}
-	v.Set("method", "auth.getSession")
+	v.Set("method", "auth.session")
 	v.Set("api_key", "4778db9e5d5b2dd00fb34792ac28c1c1")
 	v.Set("token", "9V6bP2X4OZJcMi7IRz2M50w_IAWxZ1TC")
 	sharedSecret = "bb471918f14e2b29e219185d4591baa6"
@@ -43,7 +43,7 @@ func TestSignature(t *testing.T) {
 
 func TestSignature2(t *testing.T) {
 	v := url.Values{}
-	v.Set("method", "auth.getSession")
+	v.Set("method", "auth.session")
 	v.Set("api_key", "4778db9e5d5b2dd00fb34792ac28c1c1")
 	v.Set("token", "9V6bP2X4OZJcMi7IRz2M50w_IAWxZ1TC")
 	v.Set("album[0]", "TVアニメ「血界戦線&BEYOND」オリジナルサウンドトラック")
@@ -137,7 +137,7 @@ func TestStartScrobble(t *testing.T) {
 	}
 	playedChan <- track
 
-	assert.True(t, StartScrobble(playedChan, quitChan))
+	assert.True(t, Scrobble(playedChan, quitChan))
 }
 
 func TestUpdateNowPlaying(t *testing.T) {
@@ -184,7 +184,7 @@ func TestHandleError(t *testing.T) {
 }
 
 func TestGetSession(t *testing.T) {
-	getSession()
+	session()
 }
 
 func init() {
