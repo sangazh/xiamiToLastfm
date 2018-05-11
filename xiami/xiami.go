@@ -100,6 +100,7 @@ func Tracks(playingChan, playedChan chan Track) error {
 		time.Sleep(2 * time.Second)
 
 		if !ok {
+			log.Println("xiami.album fetch failed")
 			return
 		}
 

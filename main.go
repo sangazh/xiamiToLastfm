@@ -51,9 +51,9 @@ func run() {
 	go func() {
 		for {
 			if err := lastfm.Scrobble(playedChan); err != nil {
-				fmt.Println("last.fm: scrobble sent failed. Try later.")
+				fmt.Println("last.fm: scrobble sent failed. Try again in 5 seconds.")
 				log.Println("last.fm: ", err)
-				time.Sleep(time.Second)
+				time.Sleep(time.Second * 5)
 			}
 		}
 	}()
