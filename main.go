@@ -16,6 +16,7 @@ import (
 
 var debug bool
 var frequency = time.Minute
+var config string
 
 func main() {
 	if f, _ := app.Logger(debug); f != nil {
@@ -28,13 +29,14 @@ func main() {
 }
 
 func run() {
-	tickerXM := time.NewTicker(frequency)
+	ticker := time.NewTicker(frequency)
 
-	fmt.Println("start scrobbling...")
+	fmt.Println(time.Now().Format("2006-01-02 15:04:05"), "start scrobbling...")
 	nowPlayingChan := make(chan xiami.Track)
 	playedChan := make(chan xiami.Track, 10)
 	defer func() {
 		close(nowPlayingChan)
+		windUp(playedChan)
 		close(playedChan)
 	}()
 
@@ -68,12 +70,11 @@ func run() {
 
 	for {
 		select {
-		case <-tickerXM.C:
+		case <-ticker.C:
 			xiami.Tracks(nowPlayingChan, playedChan)
 		case <-quitChan:
-			tickerXM.Stop()
-			windUp(playedChan)
-			os.Exit(0)
+			ticker.Stop()
+			return
 		}
 	}
 }
@@ -81,11 +82,12 @@ func run() {
 func init() {
 	flag.BoolVar(&debug, "d", false, "debug mode, will export logs to file")
 	minute := flag.Uint64("m", 1, "how often to check the xiami page. unit: minute")
+	flag.StringVar(&config, "c", "config.toml", "config name and path")
 	flag.Parse()
 
 	frequency *= time.Duration(*minute)
 
-	app.InitConfig()
+	app.InitConfig(config)
 }
 
 func prepare() {

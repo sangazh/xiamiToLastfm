@@ -119,9 +119,7 @@ func TestParseKey(t *testing.T) {
 
 func TestStartScrobble(t *testing.T) {
 	playedChan := make(chan xiami.Track, 10)
-	quitChan := make(chan struct{})
 	defer close(playedChan)
-	defer close(quitChan)
 	track := xiami.Track{
 		Title:     "自己顕示欲",
 		Album:     "TVアニメ『ID-0』オリジナルサウンドトラック",
@@ -137,14 +135,12 @@ func TestStartScrobble(t *testing.T) {
 	}
 	playedChan <- track
 
-	assert.True(t, Scrobble(playedChan, quitChan))
+	assert.Equal(t, nil, Scrobble(playedChan))
 }
 
 func TestUpdateNowPlaying(t *testing.T) {
 	nowPlayingChan := make(chan xiami.Track, 10)
-	quitChan := make(chan struct{})
 	defer close(nowPlayingChan)
-	defer close(quitChan)
 
 	track := xiami.Track{
 		Title:     "自己顕示欲",
@@ -153,7 +149,7 @@ func TestUpdateNowPlaying(t *testing.T) {
 		Timestamp: 1523328000,
 	}
 	nowPlayingChan <- track
-	assert.True(t, UpdateNowPlaying(nowPlayingChan, quitChan))
+	assert.Equal(t, nil, UpdateNowPlaying(nowPlayingChan))
 }
 
 func TestRenderScrobbleResp(t *testing.T) {
@@ -188,7 +184,7 @@ func TestGetSession(t *testing.T) {
 }
 
 func init() {
-	apiUrl= "http://ws.audioscrobbler.com/2.0"
+	apiUrl = "http://ws.audioscrobbler.com/2.0"
 	apiKey = "4778db9e5d5b2dd00fb34792ac28c1c1"
 	token = "9V6bP2X4OZJcMi7IRz2M50w_IAWxZ1TC"
 }
