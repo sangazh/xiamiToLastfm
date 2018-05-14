@@ -12,6 +12,7 @@ import (
 	"xiamiToLastfm/app"
 	"xiamiToLastfm/lastfm"
 	"xiamiToLastfm/xiami"
+	"github.com/theherk/viper"
 )
 
 var debug bool
@@ -31,14 +32,9 @@ func main() {
 func run() {
 	ticker := time.NewTicker(frequency)
 
-	fmt.Println(time.Now().Format("2006-01-02 15:04:05"), "start scrobbling...")
+	fmt.Println("start scrobbling...")
 	nowPlayingChan := make(chan xiami.Track)
 	playedChan := make(chan xiami.Track, 10)
-	defer func() {
-		close(nowPlayingChan)
-		windUp(playedChan)
-		close(playedChan)
-	}()
 
 	quitChan := make(chan struct{})
 	lastfm.QuitChan = quitChan
@@ -48,22 +44,28 @@ func run() {
 		if err := app.TempRead(playedChan); err != nil {
 			log.Println(err)
 		}
-	}()
 
-	go func() {
 		for {
-			if err := lastfm.Scrobble(playedChan); err != nil {
-				fmt.Println("last.fm: scrobble sent failed. Try again in 5 seconds.")
-				log.Println("last.fm: ", err)
-				time.Sleep(time.Second * 5)
-			}
-		}
-	}()
-	go func() {
-		for {
-			if err := lastfm.UpdateNowPlaying(nowPlayingChan); err != nil {
-				fmt.Println("last.fm: updateNowPlaying sent failed.")
-				log.Println("last.fm: ", err)
+			select {
+			case xm := <-nowPlayingChan:
+				if err := lastfm.UpdateNowPlaying(xm); err != nil {
+					fmt.Println("last.fm: updateNowPlaying sent failed.")
+					log.Println("last.fm: ", err)
+				}
+			case xm := <-playedChan:
+				if err := lastfm.Scrobble(xm); err != nil {
+					playedChan <- xm
+					fmt.Println("last.fm: scrobble sent failed. Try again in 5 seconds.")
+					log.Println("last.fm: ", err)
+					time.Sleep(time.Second * 5)
+				}
+				//write the execute time while channel's empty. To avoid duplicate request to last.fm.
+				if len(playedChan) < 1 {
+					viper.Set("xiami.checked_at", time.Now().Truncate(time.Minute).Unix())
+					viper.WriteConfig()
+				}
+			case <-quitChan:
+				return
 			}
 		}
 	}()
@@ -74,6 +76,10 @@ func run() {
 			xiami.Tracks(nowPlayingChan, playedChan)
 		case <-quitChan:
 			ticker.Stop()
+
+			close(nowPlayingChan)
+			windUp(playedChan)
+			close(playedChan)
 			return
 		}
 	}
@@ -100,7 +106,7 @@ func prepare() {
 func delayStart() {
 	now := time.Now()
 	start := now.Truncate(time.Minute).Add(time.Minute)
-	fmt.Println("Will start at", start.String())
+	fmt.Println("will start at", start.Format("2006-01-02 15:04:05"))
 
 	sleep := start.UnixNano() - now.UnixNano()
 	time.Sleep(time.Duration(sleep))

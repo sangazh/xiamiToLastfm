@@ -109,11 +109,11 @@ func Tracks(playingChan, playedChan chan Track) error {
 		switch scrobbleType {
 		case typeNowPlaying:
 			playingChan <- t
-			fmt.Printf("nowPlaying: %s - %s 《%s》 \n", title, artist, album)
+			fmt.Printf("nowPlaying:\t %s - %s 《%s》 \n", title, artist, album)
 			log.Println("xiami.Tracks: playingChan <- t ", t)
 		case typePlayed:
 			playedChan <- t
-			fmt.Printf("Listened: %d: %s - %s 《%s》 \n", i, title, artist, album)
+			fmt.Printf("listened [%d]:\t %s - %s 《%s》 \n", i, title, artist, album)
 			log.Println("xiami.Tracks: playedChan <- t ", t)
 		default:
 			log.Println("xiami.Tracks: switch default")

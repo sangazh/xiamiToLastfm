@@ -9,12 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"time"
-
 	"xiamiToLastfm/xiami"
 	"xiamiToLastfm/musicbrainz"
-
-	"github.com/theherk/viper"
 )
 
 // QuitChan: an empty channel used to signal main channel to stop.
@@ -42,9 +38,7 @@ type ScrobbleParams struct {
 
 // Send scrobble info to last.fm server
 // https://www.last.fm/api/show/track.scrobble
-func Scrobble(playedChan chan xiami.Track) error {
-	xm := <-playedChan
-
+func Scrobble(xm xiami.Track) error {
 	log.Println("lastfm.Scrobble playedChan track: ", xm)
 
 	v := url.Values{}
@@ -67,19 +61,13 @@ func Scrobble(playedChan chan xiami.Track) error {
 	respData, err := postRequest(v.Encode())
 	if err != nil {
 		//if failed, insert back to channel
-		playedChan <- xm
 		return err
 	}
 
 	accepted, ignored := scrobbleResponse(respData)
 	log.Printf("last.fm: Scrobble succese: accepted - %d, ignored - %d\n", accepted, ignored)
-	fmt.Printf("last.fm: Scrobbled succese. %s - %s \n", xm.Title, xm.Artist)
+	fmt.Printf("scrobbled:\t %s - %s \n", xm.Title, xm.Artist)
 
-	//write the execute time while channel's empty. To avoid duplicate request to last.fm.
-	if len(playedChan) < 1 {
-		viper.Set("xiami.checked_at", time.Now().Truncate(time.Minute).Unix())
-		viper.WriteConfig()
-	}
 	return nil
 }
 
@@ -100,8 +88,7 @@ func scrobbleResponse(data []byte) (accepted, ignored int) {
 
 // Update nowplaying
 // https://www.last.fm/api/show/track.updateNowPlaying
-func UpdateNowPlaying(nowPlayingChan chan xiami.Track) error {
-	xm := <-nowPlayingChan
+func UpdateNowPlaying(xm xiami.Track) error {
 	log.Println("last.fm: nowPlayingChan track: ", xm)
 
 	v := url.Values{}
@@ -120,7 +107,7 @@ func UpdateNowPlaying(nowPlayingChan chan xiami.Track) error {
 		return err
 	}
 
-	fmt.Printf("last.fm: UpdateNowPlaying success. %s - %s \n", xm.Title, xm.Artist)
+	fmt.Printf("updated:\t %s - %s \n", xm.Title, xm.Artist)
 	return nil
 }
 
