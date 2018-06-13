@@ -20,6 +20,9 @@ Yet another go project to scrobble your xiami recent songs to last.fm.
 7. Done!
 8. Ctrl+C 退出
 
+# 同步不成功？
+有时出现获取album失败，需要验证你是机器。有时需要登录，可能需要登录。那么脚本访问是需要Cookie。`config.toml`文件里有几个cookie的key，你可以填入相应的值。或者你可以加入其它key，动态载入。
+
 # Todo
 
  * [x] MusicBiz Track ID

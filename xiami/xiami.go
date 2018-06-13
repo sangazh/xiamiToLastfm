@@ -173,7 +173,11 @@ func document(u *url.URL) (*goquery.Document, error) {
 	u.RawQuery = v.Encode()
 
 	log.Println("xiami.document url:", u)
-	res, err := http.Get(u.String())
+
+	req, err := http.NewRequest("GET", u.String(), nil)
+	addCookies(req)
+	client := new(http.Client)
+	res, err := client.Do(req)
 
 	if err != nil {
 		log.Println("xiami.document Fatal: ", err)
@@ -191,4 +195,13 @@ func document(u *url.URL) (*goquery.Document, error) {
 		return nil, err
 	}
 	return doc, nil
+}
+func addCookies(req *http.Request) {
+	keys := viper.AllSettings()
+	xm := keys["xiami"].(map[string]interface{})
+	cookies := xm["cookie"].(map[string]interface{})
+	for k, v := range cookies {
+		req.AddCookie(&http.Cookie{Name: k, Value: v.(string)})
+		log.Printf("xiami.addCookie %s:%s \n", k, v)
+	}
 }
