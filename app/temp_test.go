@@ -2,8 +2,9 @@ package app
 
 import (
 	"testing"
-	"xiamiToLastfm/xiami"
+
 	"github.com/stretchr/testify/assert"
+	"xiamiToLastfm/xiami"
 )
 
 func TestTempStore(t *testing.T) {

@@ -1,13 +1,14 @@
 package musicbrainz
 
 import (
+	"encoding/xml"
 	"fmt"
-	"net/url"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"io/ioutil"
-	"encoding/xml"
-	"github.com/theherk/viper"
+	"net/url"
+
+	"github.com/spf13/viper"
 )
 
 // get record's MBID from its title, artist and album.

@@ -1,10 +1,11 @@
 package app
 
 import (
-	"github.com/theherk/viper"
 	"log"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/viper"
 )
 
 // Initialize config.toml config. Fatal if not exist.

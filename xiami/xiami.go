@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/theherk/viper"
+	"github.com/spf13/viper"
 )
 
 const (

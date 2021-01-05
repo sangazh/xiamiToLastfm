@@ -13,7 +13,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/theherk/viper"
+	"github.com/spf13/viper"
 )
 
 var (

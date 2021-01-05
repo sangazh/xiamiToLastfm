@@ -1,18 +1,18 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-	"log"
-	"flag"
 
+	"github.com/spf13/viper"
 	"xiamiToLastfm/app"
 	"xiamiToLastfm/lastfm"
 	"xiamiToLastfm/xiami"
-	"github.com/theherk/viper"
 )
 
 var debug bool

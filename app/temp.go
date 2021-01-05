@@ -1,13 +1,14 @@
 package app
 
 import (
-	"xiamiToLastfm/xiami"
-	"os"
-	"encoding/json"
-	"log"
-	"fmt"
 	"bufio"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"log"
+	"os"
+
+	"xiamiToLastfm/xiami"
 )
 
 var file = "temp.txt"

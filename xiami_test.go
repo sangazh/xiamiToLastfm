@@ -2,12 +2,13 @@ package main
 
 import (
 	"testing"
-	"xiamiToLastfm/xiami"
+
 	"xiamiToLastfm/app"
+	"xiamiToLastfm/xiami"
 )
 
 func TestGetTracks(t *testing.T) {
-	app.InitConfig()
+	app.InitConfig("config.toml")
 	xiami.Init()
 
 	nowPlayingChan := make(chan xiami.Track)

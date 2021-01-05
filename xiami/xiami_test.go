@@ -27,6 +27,6 @@ func TestGetAlbum(t *testing.T) {
 	url := "https://www.xiami.com/song/mSJtnV7aa77?spm=a1z1s.6626017.0.0.nGwy1E"
 	artist, album, ok := album(url)
 	assert.True(t, ok)
-	assert.Equal(t, "川井憲次" ,artist)
-	assert.Equal(t, "NHKスペシャル「人体 神秘の巨大ネットワーク」オリジナル・サウンドトラック" ,album)
+	assert.Equal(t, "川井憲次", artist)
+	assert.Equal(t, "NHKスペシャル「人体 神秘の巨大ネットワーク」オリジナル・サウンドトラック", album)
 }

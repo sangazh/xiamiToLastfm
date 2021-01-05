@@ -9,8 +9,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"xiamiToLastfm/xiami"
+
 	"xiamiToLastfm/musicbrainz"
+	"xiamiToLastfm/xiami"
 )
 
 // QuitChan: an empty channel used to signal main channel to stop.
