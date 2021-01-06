@@ -17,4 +17,4 @@ title = "Xiami and Last.fm Example"
     recording = "/recording"
 
 [xiami]
-  file = "xiami/song.json"
+  file = "song.json"
