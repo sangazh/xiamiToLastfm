@@ -17,16 +17,4 @@ title = "Xiami and Last.fm Example"
     recording = "/recording"
 
 [xiami]
-  domain = "http://www.xiami.com"
-  spm = ""
-  user_id = 0
-  checked_at = 0
-
-  [xiami.cookie]
-    _unsign_token = ""
-    _xiamitoken = ""
-    member_auth = ""
-    x5sec = ""
-
-  [xiami.url]
-    recent = "/space/charts-recent/u/"
+  file = "xiami/song.json"

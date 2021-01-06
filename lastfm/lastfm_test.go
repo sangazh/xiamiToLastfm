@@ -135,7 +135,7 @@ func TestStartScrobble(t *testing.T) {
 	}
 	playedChan <- track
 
-	assert.Equal(t, nil, Scrobble(playedChan))
+	assert.Equal(t, nil, Scrobble(track))
 }
 
 func TestUpdateNowPlaying(t *testing.T) {
@@ -149,7 +149,7 @@ func TestUpdateNowPlaying(t *testing.T) {
 		Timestamp: 1523328000,
 	}
 	nowPlayingChan <- track
-	assert.Equal(t, nil, UpdateNowPlaying(nowPlayingChan))
+	assert.Equal(t, nil, UpdateNowPlaying(track))
 }
 
 func TestRenderScrobbleResp(t *testing.T) {
@@ -180,7 +180,8 @@ func TestHandleError(t *testing.T) {
 }
 
 func TestGetSession(t *testing.T) {
-	session()
+	err := session()
+	assert.Nil(t, err)
 }
 
 func init() {

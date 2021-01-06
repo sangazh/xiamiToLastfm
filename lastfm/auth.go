@@ -141,7 +141,7 @@ func authPage() string {
 // Session keys have an infinite lifetime by default
 func session() error {
 	v := url.Values{}
-	v.Set("method", "auth.session")
+	v.Set("method", "auth.getSession")
 	v.Set("api_key", apiKey)
 	v.Set("token", token)
 	sig := signature(&v)
